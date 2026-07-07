@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ボードゲーム・ロビー</title>
+    <style>
+        /* 全体のシックなカジノ風ダークテーマ */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1c23;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #242631;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffd700;
+            margin-bottom: 24px;
+            font-size: 24px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ログイン画面のスタイル */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #3f4257;
+            background-color: #1a1c23;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .emoji-btn {
+            font-size: 30px;
+            background: #1a1c23;
+            border: 2px solid #3f4257;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.2s;
+        }
+
+        .emoji-btn:hover {
+            background-color: #2d303f;
+        }
+
+        .emoji-btn.selected {
+            border-color: #ffd700;
+            background-color: #2d3142;
+            transform: scale(1.05);
+        }
+
+        button.main-btn {
+            background-color: #ffd700;
+            color: #1a1c23;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.main-btn:hover {
+            background-color: #e6c200;
+        }
+
+        /* ロビー画面のスタイル */
+        .profile-bar {
+            background: #1a1c23;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+        }
+
+        .coin-amount {
+            color: #ffd700;
+        }
+
+        .lobby-content {
+            text-align: left;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+
+        .user-list, .room-list {
+            background: #1a1c23;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #2d303f;
+        }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .game-menu {
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-screen">
+            <h1>Game Room Login</h1>
+            <input type="text" id="username" placeholder="名前を入力してね" maxlength="10">
+            
+            <div class="section-title">アイコン（絵文字）を選択</div>
+            <div class="emoji-grid">
+                <button class="emoji-btn" onclick="selectEmoji('🐱')">🐱</button>
+                <button class="emoji-btn" onclick="selectEmoji('🕶️')">🕶️</button>
+                <button class="emoji-btn" onclick="selectEmoji('🎲')">🎲</button>
+                <button class="emoji-btn" onclick="selectEmoji('🦊')">🦊</button>
+                <button class="emoji-btn" onclick="selectEmoji('👑')">👑</button>
+                <button class="emoji-btn" onclick="selectEmoji('👻')">👻</button>
+                <button class="emoji-btn" onclick="selectEmoji('💰')">💰</button>
+                <button class="emoji-btn" onclick="selectEmoji('🐼')">🐼</button>
+            </div>
+
+            <button class="main-btn" id="login-btn">ロビーに入る</button>
+        </div>
+
+        <div id="lobby-screen" class="hidden">
+            <h1>Game Lobby</h1>
+            
+            <div class="profile-bar">
+                <div class="user-info">
+                    <span id="my-emoji">🐱</span>
+                    <span id="my-name">ゲスト</span>
+                </div>
+                <div class="coin-amount">🪙 <span id="my-coins">1000</span>C</div>
+            </div>
+
+            <div class="lobby-content">
+                <div class="section-title">オンラインのプレイヤー</div>
+                <div class="user-list" id="online-users">
+                    </div>
+
+                <div class="section-title">遊べるゲーム</div>
+                <div class="game-menu">
+                    <button class="main-btn" onclick="alert('チンチロ開発中！次回実装します')">🎲 チンチロリンを遊ぶ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // -------------------------------------------------------------
+        // 【重要】ここにあなたのFirebaseプロジェクトの情報を貼り付けてください！
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let selectedEmoji = '🐱'; // デフォルトの絵文字
+
+        // 絵文字選択の見た目制御用（グローバルに公開）
+        window.selectEmoji = function(emoji) {
+            selectedEmoji = emoji;
+            document.querySelectorAll('.emoji-btn').forEach(btn => {
+                if(btn.innerText === emoji) btn.classList.add('selected');
+                else btn.classList.remove('selected');
+            });
+        }
+        // 初期選択状態にする
+        window.selectEmoji('🐱');
+
+        // 「ロビーに入る」ボタンを押したときの処理
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert('名前を入力してね！');
+                return;
+            }
+
+            try {
+                // 1. Firebaseに匿名ログイン
+                const userCredential = await signInAnonymously(auth);
+                const uid = userCredential.user.uid;
+
+                // 2. Firestoreにユーザーデータを保存（初期コイン1000C）
+                const userData = {
+                    name: username,
+                    emoji: selectedEmoji,
+                    coins: 1000,
+                    isOnline: true
+                };
+                await setDoc(doc(db, "users", uid), userData);
+
+                // 3. 画面の切り替えと自分の情報表示
+                document.getElementById('my-name').innerText = username;
+                document.getElementById('my-emoji').innerText = selectedEmoji;
+                document.getElementById('my-coins').innerText = 1000;
+
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('lobby-screen').classList.remove('hidden');
+
+                // 4. ロビーのリアルタイム更新を開始
+                startLobbyListener();
+
+            } catch (error) {
+                console.error("ログインエラー:", error);
+                alert("ログインに失敗しました。Firebaseの設定を確認してください。");
+            }
+        });
+
+        // リアルタイムでログイン中ユーザーを取得して表示する
+        function startLobbyListener() {
+            onSnapshot(collection(db, "users"), (snapshot) => {
+                const userListDiv = document.getElementById('online-users');
+                userListDiv.innerHTML = ''; // 一旦クリア
+
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const item = document.createElement('div');
+                    item.className = 'list-item';
+                    item.innerHTML = `<span>${data.emoji}</span> <span>${data.name}</span> <span style="margin-left:auto; font-size:12px; color:#ffd700;">🪙 ${data.coins}</span>`;
+                    userListDiv.appendChild(item);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
