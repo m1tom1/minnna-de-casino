@@ -3,155 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ボードゲーム・ロビー</title>
+    <title>ボードゲーム・カジノ</title>
     <style>
         /* 全体のシックなカジノ風ダークテーマ */
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #1a1c23;
-            color: #f3f4f6;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            background-color: #242631;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-        }
-
-        h1 {
-            color: #ffd700;
-            margin-bottom: 24px;
-            font-size: 24px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* ログイン画面のスタイル */
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #3f4257;
-            background-color: #1a1c23;
-            color: white;
-            font-size: 16px;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-        }
-
-        .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-
-        .emoji-btn {
-            font-size: 30px;
-            background: #1a1c23;
-            border: 2px solid #3f4257;
-            border-radius: 8px;
-            cursor: pointer;
-            padding: 8px;
-            transition: all 0.2s;
-        }
-
-        .emoji-btn:hover {
-            background-color: #2d303f;
-        }
-
-        .emoji-btn.selected {
-            border-color: #ffd700;
-            background-color: #2d3142;
-            transform: scale(1.05);
-        }
-
-        button.main-btn {
-            background-color: #ffd700;
-            color: #1a1c23;
-            border: none;
-            padding: 14px;
-            width: 100%;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        button.main-btn:hover {
-            background-color: #e6c200;
-        }
-
-        /* ロビー画面のスタイル */
-        .profile-bar {
-            background: #1a1c23;
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffd700;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-        }
-
-        .coin-amount {
-            color: #ffd700;
-        }
-
-        .lobby-content {
-            text-align: left;
-        }
-
-        .section-title {
-            font-size: 14px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            margin-top: 16px;
-        }
-
-        .user-list, .room-list {
-            background: #1a1c23;
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .list-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 0;
-            border-bottom: 1px solid #2d303f;
-        }
-        .list-item:last-child {
-            border-bottom: none;
-        }
-
-        .game-menu {
-            margin-top: 24px;
-        }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #1a1c23; color: #f3f4f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: #242631; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 450px; text-align: center; }
+        h1 { color: #ffd700; margin-bottom: 24px; font-size: 24px; }
+        .hidden { display: none !important; }
+        
+        /* 入力フォーム・ボタン */
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3f4257; background-color: #1a1c23; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
+        button.main-btn { background-color: #ffd700; color: #1a1c23; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-bottom: 10px; }
+        button.main-btn:hover { background-color: #e6c200; }
+        button.danger-btn { background-color: #ef4444; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        
+        /* 絵文字グリッド・リスト */
+        .emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+        .emoji-btn { font-size: 30px; background: #1a1c23; border: 2px solid #3f4257; border-radius: 8px; cursor: pointer; padding: 8px; transition: all 0.2s; }
+        .emoji-btn.selected { border-color: #ffd700; background-color: #2d3142; transform: scale(1.05); }
+        .profile-bar { background: #1a1c23; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-left: 4px solid #ffd700; }
+        .section-title { font-size: 14px; color: #9ca3af; text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; text-align: left; }
+        .user-list { background: #1a1c23; border-radius: 8px; padding: 10px; max-height: 150px; overflow-y: auto; text-align: left; }
+        .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #2d303f; }
+        
+        /* チンチロ用スタイル */
+        .dice-container { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .dice { font-size: 50px; background: white; color: black; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 12px; font-weight: bold; }
+        #yaku-result { font-size: 20px; font-weight: bold; color: #ffd700; margin-bottom: 20px; min-height: 30px; }
     </style>
 </head>
 <body>
@@ -160,7 +38,6 @@
         <div id="login-screen">
             <h1>Game Room Login</h1>
             <input type="text" id="username" placeholder="名前を入力してね" maxlength="10">
-            
             <div class="section-title">アイコン（絵文字）を選択</div>
             <div class="emoji-grid">
                 <button class="emoji-btn" onclick="selectEmoji('🐱')">🐱</button>
@@ -172,42 +49,51 @@
                 <button class="emoji-btn" onclick="selectEmoji('💰')">💰</button>
                 <button class="emoji-btn" onclick="selectEmoji('🐼')">🐼</button>
             </div>
-
             <button class="main-btn" id="login-btn">ロビーに入る</button>
         </div>
 
         <div id="lobby-screen" class="hidden">
             <h1>Game Lobby</h1>
-            
             <div class="profile-bar">
-                <div class="user-info">
-                    <span id="my-emoji">🐱</span>
-                    <span id="my-name">ゲスト</span>
-                </div>
-                <div class="coin-amount">🪙 <span id="my-coins">1000</span>C</div>
+                <div class="user-info"><span id="my-emoji">🐱</span> <span id="my-name">ゲスト</span></div>
+                <div class="coin-amount">🪙 <span id="my-coins-lobby">1000</span>C</div>
             </div>
+            <div class="section-title">オンラインのプレイヤー</div>
+            <div class="user-list" id="online-users"></div>
+            <div class="section-title">遊べるゲーム</div>
+            <button class="main-btn" id="go-chinchiro-btn" style="margin-top: 10px;">🎲 チンチロリン部屋へ</button>
+            <button class="main-btn" style="background-color: #4b5563; color: white;" onclick="alert('株機能は後日実装！')">📈 株・マーケット（準備中）</button>
+        </div>
 
-            <div class="lobby-content">
-                <div class="section-title">オンラインのプレイヤー</div>
-                <div class="user-list" id="online-users">
-                    </div>
-
-                <div class="section-title">遊べるゲーム</div>
-                <div class="game-menu">
-                    <button class="main-btn" onclick="alert('チンチロ開発中！次回実装します')">🎲 チンチロリンを遊ぶ</button>
-                </div>
+        <div id="chinchiro-screen" class="hidden">
+            <h1>🎲 チンチロリン (ソロ練習用)</h1>
+            <div class="profile-bar">
+                <div>所持コイン</div>
+                <div class="coin-amount">🪙 <span id="my-coins-game">1000</span>C</div>
             </div>
+            
+            <div class="section-title">ベット額を入力 (10C〜)</div>
+            <input type="number" id="bet-amount" value="100" min="10">
+            
+            <div class="dice-container">
+                <div class="dice" id="dice1">-</div>
+                <div class="dice" id="dice2">-</div>
+                <div class="dice" id="dice3">-</div>
+            </div>
+            
+            <div id="yaku-result">ベットしてサイコロを振ろう！</div>
+            
+            <button class="danger-btn" id="roll-btn">勝負する！ (1回振り)</button>
+            <button class="main-btn" id="back-lobby-btn" style="background-color: #3f4257; color: white;">ロビーに戻る</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // -------------------------------------------------------------
-        // 【重要】ここにあなたのFirebaseプロジェクトの情報を貼り付けてください！
-        // -------------------------------------------------------------
+        // ▼▼▼ あなたのFirebase設定に書き換えてください ▼▼▼
         const firebaseConfig = {
             apiKey: "AIzaSyDFGxRrxG104_Dw2XTXiQwIJ0KsVxkM42w",
             authDomain: "minnna-de-casino.firebaseapp.com",
@@ -217,15 +103,16 @@
             messagingSenderId: "246754430160",
             appId: "1:246754430160:web:9907c3159c2003c6aba2d5"
         };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-        // Firebaseの初期化
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let selectedEmoji = '🐱'; // デフォルトの絵文字
+        let selectedEmoji = '🐱';
+        let currentUserId = null;
+        let currentCoins = 1000;
 
-        // 絵文字選択の見た目制御用（グローバルに公開）
         window.selectEmoji = function(emoji) {
             selectedEmoji = emoji;
             document.querySelectorAll('.emoji-btn').forEach(btn => {
@@ -233,54 +120,56 @@
                 else btn.classList.remove('selected');
             });
         }
-        // 初期選択状態にする
         window.selectEmoji('🐱');
 
-        // 「ロビーに入る」ボタンを押したときの処理
+        // --- 画面切り替え関数 ---
+        function showScreen(screenId) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('lobby-screen').classList.add('hidden');
+            document.getElementById('chinchiro-screen').classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // --- ログイン処理 ---
         document.getElementById('login-btn').addEventListener('click', async () => {
             const username = document.getElementById('username').value.trim();
-            if (!username) {
-                alert('名前を入力してね！');
-                return;
-            }
+            if (!username) return alert('名前を入力してね！');
 
             try {
-                // 1. Firebaseに匿名ログイン
                 const userCredential = await signInAnonymously(auth);
-                const uid = userCredential.user.uid;
+                currentUserId = userCredential.user.uid;
 
-                // 2. Firestoreにユーザーデータを保存（初期コイン1000C）
-                const userData = {
-                    name: username,
-                    emoji: selectedEmoji,
-                    coins: 1000,
-                    isOnline: true
-                };
-                await setDoc(doc(db, "users", uid), userData);
+                // 初回ログインかチェック（既にコインがあれば引き継ぐ）
+                const userDocRef = doc(db, "users", currentUserId);
+                const userSnap = await getDoc(userDocRef);
+                
+                if (!userSnap.exists()) {
+                    await setDoc(userDocRef, { name: username, emoji: selectedEmoji, coins: 1000 });
+                } else {
+                    currentCoins = userSnap.data().coins;
+                }
 
-                // 3. 画面の切り替えと自分の情報表示
                 document.getElementById('my-name').innerText = username;
                 document.getElementById('my-emoji').innerText = selectedEmoji;
-                document.getElementById('my-coins').innerText = 1000;
+                
+                // コインのリアルタイム監視を開始
+                onSnapshot(userDocRef, (doc) => {
+                    currentCoins = doc.data().coins;
+                    document.getElementById('my-coins-lobby').innerText = currentCoins;
+                    document.getElementById('my-coins-game').innerText = currentCoins;
+                });
 
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('lobby-screen').classList.remove('hidden');
-
-                // 4. ロビーのリアルタイム更新を開始
+                showScreen('lobby-screen');
                 startLobbyListener();
-
             } catch (error) {
-                console.error("ログインエラー:", error);
-                alert("ログインに失敗しました。Firebaseの設定を確認してください。");
+                console.error(error); alert("ログイン失敗");
             }
         });
 
-        // リアルタイムでログイン中ユーザーを取得して表示する
         function startLobbyListener() {
             onSnapshot(collection(db, "users"), (snapshot) => {
                 const userListDiv = document.getElementById('online-users');
-                userListDiv.innerHTML = ''; // 一旦クリア
-
+                userListDiv.innerHTML = '';
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     const item = document.createElement('div');
@@ -290,6 +179,53 @@
                 });
             });
         }
+
+        // --- 画面移動ボタン ---
+        document.getElementById('go-chinchiro-btn').addEventListener('click', () => showScreen('chinchiro-screen'));
+        document.getElementById('back-lobby-btn').addEventListener('click', () => showScreen('lobby-screen'));
+
+        // --- チンチロ判定ロジック ---
+        document.getElementById('roll-btn').addEventListener('click', async () => {
+            const betAmount = parseInt(document.getElementById('bet-amount').value);
+            if (betAmount > currentCoins) return alert('コインが足りません！');
+            if (betAmount < 10 || isNaN(betAmount)) return alert('正しい額を入力してください');
+
+            // 1. まずベット額を引く（データベース更新）
+            const userRef = doc(db, "users", currentUserId);
+            await updateDoc(userRef, { coins: currentCoins - betAmount });
+
+            // 2. サイコロを振る
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+            const d3 = Math.floor(Math.random() * 6) + 1;
+            
+            document.getElementById('dice1').innerText = d1;
+            document.getElementById('dice2').innerText = d2;
+            document.getElementById('dice3').innerText = d3;
+
+            // 3. 役の判定
+            const dice = [d1, d2, d3].sort((a, b) => a - b);
+            const strDice = dice.join('');
+            
+            let resultText = "";
+            let multiplier = 0; // 倍率 (負けは0、通常勝ちは2など)
+
+            if (strDice === "111") { resultText = "✨ ピンゾロ (5倍) ✨"; multiplier = 5; }
+            else if (dice[0] === dice[1] && dice[1] === dice[2]) { resultText = `🔥 ゾロ目 (3倍) 🔥`; multiplier = 3; }
+            else if (strDice === "456") { resultText = "🎉 シゴロ (2倍) 🎉"; multiplier = 2; }
+            else if (strDice === "123") { resultText = "💀 ヒフミ (即負け) 💀"; multiplier = 0; }
+            else if (dice[0] === dice[1]) { resultText = `出目: ${dice[2]} (等倍)`; multiplier = (dice[2] >= 4) ? 2 : 0; } // 4~6なら勝ち
+            else if (dice[1] === dice[2]) { resultText = `出目: ${dice[0]} (等倍)`; multiplier = (dice[0] >= 4) ? 2 : 0; }
+            else { resultText = "💨 役なし (負け) 💨"; multiplier = 0; }
+
+            document.getElementById('yaku-result').innerText = resultText;
+
+            // 4. 勝った場合はコインを増やす
+            if (multiplier > 0) {
+                const winAmount = betAmount * multiplier;
+                await updateDoc(userRef, { coins: currentCoins + winAmount });
+            }
+        });
     </script>
 </body>
 </html>
