@@ -3,97 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ボードゲーム・カジノ</title>
+    <title>ボードゲーム・カジノ (ルーム制)</title>
     <style>
-        /* 全体のシックなカジノ風ダークテーマ */
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #1a1c23; color: #f3f4f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background-color: #242631; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 450px; text-align: center; }
         h1 { color: #ffd700; margin-bottom: 24px; font-size: 24px; }
         .hidden { display: none !important; }
         
-        /* 入力フォーム・ボタン */
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3f4257; background-color: #1a1c23; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3f4257; background-color: #1a1c23; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
         button.main-btn { background-color: #ffd700; color: #1a1c23; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-bottom: 10px; }
         button.main-btn:hover { background-color: #e6c200; }
         button.danger-btn { background-color: #ef4444; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
         
-        /* 絵文字グリッド・リスト */
         .emoji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
-        .emoji-btn { font-size: 30px; background: #1a1c23; border: 2px solid #3f4257; border-radius: 8px; cursor: pointer; padding: 8px; transition: all 0.2s; }
+        .emoji-btn { font-size: 30px; background: #1a1c23; border: 2px solid #3f4257; border-radius: 8px; cursor: pointer; padding: 8px; }
         .emoji-btn.selected { border-color: #ffd700; background-color: #2d3142; transform: scale(1.05); }
         .profile-bar { background: #1a1c23; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-left: 4px solid #ffd700; }
         .section-title { font-size: 14px; color: #9ca3af; text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; text-align: left; }
-        .user-list { background: #1a1c23; border-radius: 8px; padding: 10px; max-height: 150px; overflow-y: auto; text-align: left; }
+        .user-list { background: #1a1c23; border-radius: 8px; padding: 10px; min-height: 100px; text-align: left; margin-bottom: 20px; }
         .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #2d303f; }
-        
-        /* チンチロ用スタイル */
-        .dice-container { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-        .dice { font-size: 50px; background: white; color: black; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 12px; font-weight: bold; }
-        #yaku-result { font-size: 20px; font-weight: bold; color: #ffd700; margin-bottom: 20px; min-height: 30px; }
+        .host-crown { color: #ffd700; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div id="login-screen">
-            <h1>Game Room Login</h1>
-            <input type="text" id="username" placeholder="名前を入力してね" maxlength="10">
-            <div class="section-title">アイコン（絵文字）を選択</div>
+            <h1>カジノ入場ゲート</h1>
+            <input type="text" id="username" placeholder="名前を入力" maxlength="10">
             <div class="emoji-grid">
                 <button class="emoji-btn" onclick="selectEmoji('🐱')">🐱</button>
                 <button class="emoji-btn" onclick="selectEmoji('🕶️')">🕶️</button>
                 <button class="emoji-btn" onclick="selectEmoji('🎲')">🎲</button>
                 <button class="emoji-btn" onclick="selectEmoji('🦊')">🦊</button>
-                <button class="emoji-btn" onclick="selectEmoji('👑')">👑</button>
-                <button class="emoji-btn" onclick="selectEmoji('👻')">👻</button>
-                <button class="emoji-btn" onclick="selectEmoji('💰')">💰</button>
-                <button class="emoji-btn" onclick="selectEmoji('🐼')">🐼</button>
             </div>
-            <button class="main-btn" id="login-btn">ロビーに入る</button>
+            <button class="main-btn" id="login-btn">ログインして進む</button>
         </div>
 
         <div id="lobby-screen" class="hidden">
             <h1>Game Lobby</h1>
             <div class="profile-bar">
-                <div class="user-info"><span id="my-emoji">🐱</span> <span id="my-name">ゲスト</span></div>
-                <div class="coin-amount">🪙 <span id="my-coins-lobby">1000</span>C</div>
+                <div class="user-info"><span id="my-emoji"></span> <span id="my-name"></span></div>
+                <div class="coin-amount">🪙 <span id="my-coins-lobby"></span>C</div>
             </div>
-            <div class="section-title">オンラインのプレイヤー</div>
-            <div class="user-list" id="online-users"></div>
-            <div class="section-title">遊べるゲーム</div>
-            <button class="main-btn" id="go-chinchiro-btn" style="margin-top: 10px;">🎲 チンチロリン部屋へ</button>
-            <button class="main-btn" style="background-color: #4b5563; color: white;" onclick="alert('株機能は後日実装！')">📈 株・マーケット（準備中）</button>
+            
+            <button class="main-btn" id="create-room-btn">🌟 新しく部屋を作る</button>
+            
+            <div class="section-title">合言葉で参加</div>
+            <input type="text" id="room-code-input" placeholder="部屋コードを入力">
+            <button class="main-btn" id="join-room-btn" style="background-color: #3b82f6; color: white;">入室する</button>
         </div>
 
-        <div id="chinchiro-screen" class="hidden">
-            <h1>🎲 チンチロリン (ソロ練習用)</h1>
-            <div class="profile-bar">
-                <div>所持コイン</div>
-                <div class="coin-amount">🪙 <span id="my-coins-game">1000</span>C</div>
-            </div>
+        <div id="room-screen" class="hidden">
+            <h1 id="room-title">Room: ----</h1>
+            <p style="font-size: 12px; color: #9ca3af; margin-top:-15px;">友達を誘うURL: <br><span id="invite-url" style="color:#60a5fa; cursor:pointer;"></span></p>
             
-            <div class="section-title">ベット額を入力 (10C〜)</div>
-            <input type="number" id="bet-amount" value="100" min="10">
+            <div class="section-title">テーブルにいるプレイヤー</div>
+            <div class="user-list" id="room-users"></div>
             
-            <div class="dice-container">
-                <div class="dice" id="dice1">-</div>
-                <div class="dice" id="dice2">-</div>
-                <div class="dice" id="dice3">-</div>
-            </div>
+            <button class="danger-btn hidden" id="start-game-btn">ゲームスタート！(ホスト専用)</button>
             
-            <div id="yaku-result">ベットしてサイコロを振ろう！</div>
+            <div id="waiting-msg" style="color: #ffd700; margin-bottom: 20px;">ホストが開始するのを待っています...</div>
             
-            <button class="danger-btn" id="roll-btn">勝負する！ (1回振り)</button>
-            <button class="main-btn" id="back-lobby-btn" style="background-color: #3f4257; color: white;">ロビーに戻る</button>
+            <button class="main-btn" id="leave-room-btn" style="background-color: #3f4257; color: white;">退出する</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // 🔥 Realtime Database を読み込む
+        import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // ▼▼▼ あなたのFirebase設定に書き換えてください ▼▼▼
+        // ▼▼▼ あなたのFirebase設定 ▼▼▼
         const firebaseConfig = {
             apiKey: "AIzaSyDFGxRrxG104_Dw2XTXiQwIJ0KsVxkM42w",
             authDomain: "minnna-de-casino.firebaseapp.com",
@@ -103,129 +85,164 @@
             messagingSenderId: "246754430160",
             appId: "1:246754430160:web:9907c3159c2003c6aba2d5"
         };
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = getDatabase(app); // RTDBに変更
 
-        let selectedEmoji = '🐱';
+        let userData = { emoji: '🐱', name: '', coins: 1000 };
         let currentUserId = null;
-        let currentCoins = 1000;
+        let currentRoomId = null;
 
-        window.selectEmoji = function(emoji) {
-            selectedEmoji = emoji;
+        window.selectEmoji = (emoji) => {
+            userData.emoji = emoji;
             document.querySelectorAll('.emoji-btn').forEach(btn => {
-                if(btn.innerText === emoji) btn.classList.add('selected');
-                else btn.classList.remove('selected');
+                btn.classList.toggle('selected', btn.innerText === emoji);
             });
         }
         window.selectEmoji('🐱');
 
-        // --- 画面切り替え関数 ---
         function showScreen(screenId) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('lobby-screen').classList.add('hidden');
-            document.getElementById('chinchiro-screen').classList.add('hidden');
+            ['login-screen', 'lobby-screen', 'room-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
             document.getElementById(screenId).classList.remove('hidden');
         }
 
-        // --- ログイン処理 ---
+        // --- 1. ログイン処理 ---
         document.getElementById('login-btn').addEventListener('click', async () => {
-            const username = document.getElementById('username').value.trim();
-            if (!username) return alert('名前を入力してね！');
+            userData.name = document.getElementById('username').value.trim();
+            if (!userData.name) return alert('名前を入力してね！');
 
-            try {
-                const userCredential = await signInAnonymously(auth);
-                currentUserId = userCredential.user.uid;
+            const userCredential = await signInAnonymously(auth);
+            currentUserId = userCredential.user.uid;
 
-                // 初回ログインかチェック（既にコインがあれば引き継ぐ）
-                const userDocRef = doc(db, "users", currentUserId);
-                const userSnap = await getDoc(userDocRef);
-                
-                if (!userSnap.exists()) {
-                    await setDoc(userDocRef, { name: username, emoji: selectedEmoji, coins: 1000 });
-                } else {
-                    currentCoins = userSnap.data().coins;
-                }
+            // ユーザーデータ（コイン等）を永続保存する場所
+            const userRef = ref(db, `users/${currentUserId}`);
+            const snapshot = await get(userRef);
+            
+            if (snapshot.exists()) {
+                userData.coins = snapshot.val().coins; // 過去のコインを引き継ぐ
+            } else {
+                await set(userRef, userData); // 新規登録
+            }
 
-                document.getElementById('my-name').innerText = username;
-                document.getElementById('my-emoji').innerText = selectedEmoji;
-                
-                // コインのリアルタイム監視を開始
-                onSnapshot(userDocRef, (doc) => {
-                    currentCoins = doc.data().coins;
-                    document.getElementById('my-coins-lobby').innerText = currentCoins;
-                    document.getElementById('my-coins-game').innerText = currentCoins;
-                });
+            // UI更新
+            document.getElementById('my-name').innerText = userData.name;
+            document.getElementById('my-emoji').innerText = userData.emoji;
+            document.getElementById('my-coins-lobby').innerText = userData.coins;
 
+            // URLに部屋コードがあるかチェック（招待URLから来た場合）
+            const urlParams = new URLSearchParams(window.location.search);
+            const inviteRoom = urlParams.get('room');
+            if (inviteRoom) {
+                joinRoom(inviteRoom);
+            } else {
                 showScreen('lobby-screen');
-                startLobbyListener();
-            } catch (error) {
-                console.error(error); alert("ログイン失敗");
             }
         });
 
-        function startLobbyListener() {
-            onSnapshot(collection(db, "users"), (snapshot) => {
-                const userListDiv = document.getElementById('online-users');
-                userListDiv.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const item = document.createElement('div');
-                    item.className = 'list-item';
-                    item.innerHTML = `<span>${data.emoji}</span> <span>${data.name}</span> <span style="margin-left:auto; font-size:12px; color:#ffd700;">🪙 ${data.coins}</span>`;
-                    userListDiv.appendChild(item);
-                });
+        // --- 2. 部屋を作る ---
+        document.getElementById('create-room-btn').addEventListener('click', async () => {
+            const roomId = Math.random().toString(36).substring(2, 6).toUpperCase(); // 4桁の合言葉
+            
+            // 部屋の初期データをセット
+            await set(ref(db, `rooms/${roomId}`), {
+                status: 'waiting',
+                host: currentUserId
+            });
+            joinRoom(roomId);
+        });
+
+        // --- 3. 部屋に参加する ---
+        document.getElementById('join-room-btn').addEventListener('click', () => {
+            const roomId = document.getElementById('room-code-input').value.toUpperCase();
+            if(!roomId) return;
+            joinRoom(roomId);
+        });
+
+        async function joinRoom(roomId) {
+            const roomRef = ref(db, `rooms/${roomId}`);
+            const roomSnap = await get(roomRef);
+            
+            if (!roomSnap.exists()) {
+                return alert("その部屋は見つかりません！");
+            }
+
+            currentRoomId = roomId;
+            document.getElementById('room-title').innerText = `Room: ${roomId}`;
+            
+            // 招待URLを生成して表示
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+            document.getElementById('invite-url').innerText = inviteUrl;
+            document.getElementById('invite-url').onclick = () => {
+                navigator.clipboard.writeText(inviteUrl);
+                alert("URLをコピーしました！Discord等に貼り付けて友達を呼べます！");
+            };
+
+            // 自分が部屋に入ったことを登録し、「切断時に自動で消える」設定をする
+            const myPlayerRef = ref(db, `rooms/${roomId}/players/${currentUserId}`);
+            await set(myPlayerRef, userData);
+            onDisconnect(myPlayerRef).remove(); // 魔法の一行：ブラウザを閉じたら消える！
+
+            showScreen('room-screen');
+            listenToRoom(roomId);
+        }
+
+        // --- 4. 部屋の監視（リアルタイム同期） ---
+        function listenToRoom(roomId) {
+            const roomRef = ref(db, `rooms/${roomId}`);
+            
+            onValue(roomRef, (snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    alert("部屋が解散されました");
+                    showScreen('lobby-screen');
+                    return;
+                }
+
+                // プレイヤーリストの描画
+                const usersDiv = document.getElementById('room-users');
+                usersDiv.innerHTML = '';
+                const players = data.players || {};
+                
+                // もしホストが抜けていたら、残っている一番上の人を新しいホストにする
+                if (!players[data.host]) {
+                    const remainingPlayers = Object.keys(players);
+                    if (remainingPlayers.length > 0) {
+                        data.host = remainingPlayers[0];
+                        update(roomRef, { host: data.host });
+                    }
+                }
+
+                for (const [uid, player] of Object.entries(players)) {
+                    const isHost = (uid === data.host);
+                    usersDiv.innerHTML += `
+                        <div class="list-item">
+                            <span>${player.emoji}</span> <span>${player.name}</span>
+                            ${isHost ? '<span class="host-crown">👑親</span>' : ''}
+                            <span style="margin-left:auto; font-size:12px; color:#ffd700;">🪙 ${player.coins}</span>
+                        </div>
+                    `;
+                }
+
+                // 自分へのUI切り替え（ホストかどうか）
+                const isMyHost = (data.host === currentUserId);
+                document.getElementById('start-game-btn').classList.toggle('hidden', !isMyHost);
+                document.getElementById('waiting-msg').classList.toggle('hidden', isMyHost);
             });
         }
 
-        // --- 画面移動ボタン ---
-        document.getElementById('go-chinchiro-btn').addEventListener('click', () => showScreen('chinchiro-screen'));
-        document.getElementById('back-lobby-btn').addEventListener('click', () => showScreen('lobby-screen'));
-
-        // --- チンチロ判定ロジック ---
-        document.getElementById('roll-btn').addEventListener('click', async () => {
-            const betAmount = parseInt(document.getElementById('bet-amount').value);
-            if (betAmount > currentCoins) return alert('コインが足りません！');
-            if (betAmount < 10 || isNaN(betAmount)) return alert('正しい額を入力してください');
-
-            // 1. まずベット額を引く（データベース更新）
-            const userRef = doc(db, "users", currentUserId);
-            await updateDoc(userRef, { coins: currentCoins - betAmount });
-
-            // 2. サイコロを振る
-            const d1 = Math.floor(Math.random() * 6) + 1;
-            const d2 = Math.floor(Math.random() * 6) + 1;
-            const d3 = Math.floor(Math.random() * 6) + 1;
-            
-            document.getElementById('dice1').innerText = d1;
-            document.getElementById('dice2').innerText = d2;
-            document.getElementById('dice3').innerText = d3;
-
-            // 3. 役の判定
-            const dice = [d1, d2, d3].sort((a, b) => a - b);
-            const strDice = dice.join('');
-            
-            let resultText = "";
-            let multiplier = 0; // 倍率 (負けは0、通常勝ちは2など)
-
-            if (strDice === "111") { resultText = "✨ ピンゾロ (5倍) ✨"; multiplier = 5; }
-            else if (dice[0] === dice[1] && dice[1] === dice[2]) { resultText = `🔥 ゾロ目 (3倍) 🔥`; multiplier = 3; }
-            else if (strDice === "456") { resultText = "🎉 シゴロ (2倍) 🎉"; multiplier = 2; }
-            else if (strDice === "123") { resultText = "💀 ヒフミ (即負け) 💀"; multiplier = 0; }
-            else if (dice[0] === dice[1]) { resultText = `出目: ${dice[2]} (等倍)`; multiplier = (dice[2] >= 4) ? 2 : 0; } // 4~6なら勝ち
-            else if (dice[1] === dice[2]) { resultText = `出目: ${dice[0]} (等倍)`; multiplier = (dice[0] >= 4) ? 2 : 0; }
-            else { resultText = "💨 役なし (負け) 💨"; multiplier = 0; }
-
-            document.getElementById('yaku-result').innerText = resultText;
-
-            // 4. 勝った場合はコインを増やす
-            if (multiplier > 0) {
-                const winAmount = betAmount * multiplier;
-                await updateDoc(userRef, { coins: currentCoins + winAmount });
+        // --- 5. 退出処理 ---
+        document.getElementById('leave-room-btn').addEventListener('click', async () => {
+            if (currentRoomId) {
+                // データベースから自分を消す
+                await remove(ref(db, `rooms/${currentRoomId}/players/${currentUserId}`));
+                currentRoomId = null;
             }
+            showScreen('lobby-screen');
         });
+
     </script>
 </body>
 </html>
