@@ -25,17 +25,45 @@
         .host-badge { background: #3f4257; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
         .oya-badge { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold;}
         
-        /* 本格3Dサイコロのスタイル */
-        .dice-area { display: flex; justify-content: center; gap: 20px; margin: 30px 0; perspective: 500px; }
-        .dice-3d { width: 60px; height: 60px; position: relative; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1); }
-        .face { position: absolute; width: 60px; height: 60px; background: white; color: black; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 40px; border: 1px solid #ccc; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
-        /* サイコロを箱にする */
-        .front  { transform: translateZ(30px); }
-        .back   { transform: rotateY(180deg) translateZ(30px); }
-        .right  { transform: rotateY(90deg) translateZ(30px); }
-        .left   { transform: rotateY(-90deg) translateZ(30px); }
-        .top    { transform: rotateX(90deg) translateZ(30px); }
-        .bottom { transform: rotateX(-90deg) translateZ(30px); }
+        /* 本格3Dサイコロのスタイル（CSS Dots版） */
+.dice-area { display: flex; justify-content: center; gap: 20px; margin: 30px 0; perspective: 600px; }
+.dice-3d { width: 60px; height: 60px; position: relative; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1); }
+
+/* サイコロの各面をグリッド化して点を配置しやすくする */
+.face { 
+    position: absolute; width: 60px; height: 60px; 
+    background: #f8f9fa; border-radius: 8px; 
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.1), 0 0 2px rgba(0,0,0,0.2); 
+    display: grid; grid-template-areas: "a b c" "d e f" "g h i"; 
+    padding: 10px; box-sizing: border-box;
+}
+
+/* サイコロの点（立体的なくぼみを表現） */
+.dot { 
+    width: 12px; height: 12px; background: #1f2937; border-radius: 50%; 
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.5), 0 1px 1px rgba(255,255,255,0.8); 
+    justify-self: center; align-self: center; 
+}
+
+/* 1の目だけ特別（赤くて大きい） */
+.front .dot-center { background: #ef4444; width: 16px; height: 16px; box-shadow: inset 0 3px 5px rgba(100,0,0,0.6), 0 1px 1px rgba(255,255,255,0.8); }
+
+/* 点の配置場所指定 */
+.dot-center { grid-area: e; }
+.dot-top-left { grid-area: a; }
+.dot-top-right { grid-area: c; }
+.dot-middle-left { grid-area: d; }
+.dot-middle-right { grid-area: f; }
+.dot-bottom-left { grid-area: g; }
+.dot-bottom-right { grid-area: i; }
+
+/* サイコロを箱型に組み立てる */
+.front  { transform: translateZ(30px); }
+.back   { transform: rotateY(180deg) translateZ(30px); }
+.right  { transform: rotateY(90deg) translateZ(30px); }
+.left   { transform: rotateY(-90deg) translateZ(30px); }
+.top    { transform: rotateX(90deg) translateZ(30px); }
+.bottom { transform: rotateX(-90deg) translateZ(30px); }
     </style>
 </head>
 <body>
@@ -76,32 +104,32 @@
             <button class="main-btn" id="leave-room-btn" style="background-color: #3f4257; color: white;">退出する</button>
         </div>
 
-        <div id="game-screen" class="hidden">
-            <h1>🎲 チンチロリン</h1>
-            <div class="profile-bar">
-                <div>所持コイン</div>
-                <div class="coin-amount">🪙 <span id="my-coins-game"></span>C</div>
-            </div>
-
-            <div class="dice-area" id="dice-area">
-                <div class="dice-3d" id="dice1-3d">
-                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
-                </div>
-                <div class="dice-3d" id="dice2-3d">
-                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
-                </div>
-                <div class="dice-3d" id="dice3-3d">
-                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
-                </div>
-            </div>
-            <div id="game-status-text" style="font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 20px;">ベットを受付中...</div>
-
-            <div class="user-list" id="game-players" style="font-size: 14px;">
-                </div>
-
-            <button class="danger-btn" id="roll-dice-btn">サイコロを振る！</button>
-            <button class="main-btn" id="back-to-room-btn" style="background-color: #3f4257; color: white;">待機室に戻る (ホスト専用)</button>
-        </div>
+        <div class="dice-area" id="dice-area">
+    <div class="dice-3d" id="dice1-3d">
+        <div class="face front"><div class="dot dot-center"></div></div>
+        <div class="face bottom"><div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face right"><div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face left"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face top"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face back"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+    </div>
+    <div class="dice-3d" id="dice2-3d">
+        <div class="face front"><div class="dot dot-center"></div></div>
+        <div class="face bottom"><div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face right"><div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face left"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face top"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face back"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+    </div>
+    <div class="dice-3d" id="dice3-3d">
+        <div class="face front"><div class="dot dot-center"></div></div>
+        <div class="face bottom"><div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face right"><div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face left"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face top"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+        <div class="face back"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div>
+    </div>
+</div>
     </div>
 
     <script type="module">
