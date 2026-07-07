@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ボードゲーム・カジノ (ルーム制)</title>
+    <title>ボードゲーム・カジノ (チンチロ実装)</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #1a1c23; color: #f3f4f6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .container { background-color: #242631; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 450px; text-align: center; }
         h1 { color: #ffd700; margin-bottom: 24px; font-size: 24px; }
         .hidden { display: none !important; }
         
-        input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3f4257; background-color: #1a1c23; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #3f4257; background-color: #1a1c23; color: white; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
         button.main-btn { background-color: #ffd700; color: #1a1c23; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-bottom: 10px; }
         button.main-btn:hover { background-color: #e6c200; }
         button.danger-btn { background-color: #ef4444; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
@@ -21,8 +21,19 @@
         .profile-bar { background: #1a1c23; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-left: 4px solid #ffd700; }
         .section-title { font-size: 14px; color: #9ca3af; text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; text-align: left; }
         .user-list { background: #1a1c23; border-radius: 8px; padding: 10px; min-height: 100px; text-align: left; margin-bottom: 20px; }
-        .list-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #2d303f; }
-        .host-crown { color: #ffd700; font-size: 12px; }
+        .list-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #2d303f; }
+        .host-badge { background: #3f4257; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+        .oya-badge { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold;}
+        
+        /* 3Dサイコロのスタイル */
+        .dice-area { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .dice { font-size: 50px; width: 60px; height: 60px; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: black; box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.5); transform-style: preserve-3d; }
+        .rolling { animation: roll-animation 0.8s infinite linear; }
+        @keyframes roll-animation {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateY(0); }
+            50% { transform: rotateX(180deg) rotateY(180deg) rotateZ(90deg) translateY(-20px); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg) translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -46,9 +57,7 @@
                 <div class="user-info"><span id="my-emoji"></span> <span id="my-name"></span></div>
                 <div class="coin-amount">🪙 <span id="my-coins-lobby"></span>C</div>
             </div>
-            
             <button class="main-btn" id="create-room-btn">🌟 新しく部屋を作る</button>
-            
             <div class="section-title">合言葉で参加</div>
             <input type="text" id="room-code-input" placeholder="部屋コードを入力">
             <button class="main-btn" id="join-room-btn" style="background-color: #3b82f6; color: white;">入室する</button>
@@ -57,22 +66,39 @@
         <div id="room-screen" class="hidden">
             <h1 id="room-title">Room: ----</h1>
             <p style="font-size: 12px; color: #9ca3af; margin-top:-15px;">友達を誘うURL: <br><span id="invite-url" style="color:#60a5fa; cursor:pointer;"></span></p>
-            
             <div class="section-title">テーブルにいるプレイヤー</div>
             <div class="user-list" id="room-users"></div>
             
             <button class="danger-btn hidden" id="start-game-btn">ゲームスタート！(ホスト専用)</button>
-            
             <div id="waiting-msg" style="color: #ffd700; margin-bottom: 20px;">ホストが開始するのを待っています...</div>
-            
             <button class="main-btn" id="leave-room-btn" style="background-color: #3f4257; color: white;">退出する</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <h1>🎲 チンチロリン</h1>
+            <div class="profile-bar">
+                <div>所持コイン</div>
+                <div class="coin-amount">🪙 <span id="my-coins-game"></span>C</div>
+            </div>
+
+            <div class="dice-area" id="dice-area">
+                <div class="dice" id="dice1">🎲</div>
+                <div class="dice" id="dice2">🎲</div>
+                <div class="dice" id="dice3">🎲</div>
+            </div>
+            <div id="game-status-text" style="font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 20px;">ベットを受付中...</div>
+
+            <div class="user-list" id="game-players" style="font-size: 14px;">
+                </div>
+
+            <button class="danger-btn" id="roll-dice-btn">サイコロを振る！</button>
+            <button class="main-btn" id="back-to-room-btn" style="background-color: #3f4257; color: white;">待機室に戻る (ホスト専用)</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        // 🔥 Realtime Database を読み込む
         import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         // ▼▼▼ あなたのFirebase設定 ▼▼▼
@@ -88,161 +114,204 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getDatabase(app); // RTDBに変更
+        const db = getDatabase(app);
 
-        let userData = { emoji: '🐱', name: '', coins: 1000 };
+        let userData = { emoji: '🐱', name: '', coins: 1000, dice: [0,0,0], isRolling: false };
         let currentUserId = null;
         let currentRoomId = null;
+        let isHost = false;
+
+        const diceFaces = ['🎲', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
         window.selectEmoji = (emoji) => {
             userData.emoji = emoji;
-            document.querySelectorAll('.emoji-btn').forEach(btn => {
-                btn.classList.toggle('selected', btn.innerText === emoji);
-            });
+            document.querySelectorAll('.emoji-btn').forEach(btn => btn.classList.toggle('selected', btn.innerText === emoji));
         }
-        window.selectEmoji('🐱');
 
         function showScreen(screenId) {
-            ['login-screen', 'lobby-screen', 'room-screen'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
+            ['login-screen', 'lobby-screen', 'room-screen', 'game-screen'].forEach(id => document.getElementById(id).classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
         }
+
+        // --- 自動ログインチェック ---
+        window.onload = () => {
+            const savedName = localStorage.getItem('casinoName');
+            const savedEmoji = localStorage.getItem('casinoEmoji');
+            if (savedName) {
+                document.getElementById('username').value = savedName;
+                selectEmoji(savedEmoji || '🐱');
+                document.getElementById('login-btn').click(); // 自動ログイン実行
+            } else {
+                selectEmoji('🐱');
+            }
+        };
 
         // --- 1. ログイン処理 ---
         document.getElementById('login-btn').addEventListener('click', async () => {
             userData.name = document.getElementById('username').value.trim();
             if (!userData.name) return alert('名前を入力してね！');
 
+            // ローカルストレージに保存（次回スキップ用）
+            localStorage.setItem('casinoName', userData.name);
+            localStorage.setItem('casinoEmoji', userData.emoji);
+
             const userCredential = await signInAnonymously(auth);
             currentUserId = userCredential.user.uid;
 
-            // ユーザーデータ（コイン等）を永続保存する場所
             const userRef = ref(db, `users/${currentUserId}`);
             const snapshot = await get(userRef);
-            
             if (snapshot.exists()) {
-                userData.coins = snapshot.val().coins; // 過去のコインを引き継ぐ
+                userData.coins = snapshot.val().coins;
             } else {
-                await set(userRef, userData); // 新規登録
+                await set(userRef, { name: userData.name, emoji: userData.emoji, coins: 1000 });
             }
 
-            // UI更新
             document.getElementById('my-name').innerText = userData.name;
             document.getElementById('my-emoji').innerText = userData.emoji;
             document.getElementById('my-coins-lobby').innerText = userData.coins;
+            document.getElementById('my-coins-game').innerText = userData.coins;
 
-            // URLに部屋コードがあるかチェック（招待URLから来た場合）
             const urlParams = new URLSearchParams(window.location.search);
             const inviteRoom = urlParams.get('room');
-            if (inviteRoom) {
-                joinRoom(inviteRoom);
-            } else {
-                showScreen('lobby-screen');
-            }
+            if (inviteRoom) joinRoom(inviteRoom);
+            else showScreen('lobby-screen');
         });
 
-        // --- 2. 部屋を作る ---
+        // --- 2. 部屋作成と参加 ---
         document.getElementById('create-room-btn').addEventListener('click', async () => {
-            const roomId = Math.random().toString(36).substring(2, 6).toUpperCase(); // 4桁の合言葉
-            
-            // 部屋の初期データをセット
-            await set(ref(db, `rooms/${roomId}`), {
-                status: 'waiting',
-                host: currentUserId
-            });
+            const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+            await set(ref(db, `rooms/${roomId}`), { status: 'waiting', host: currentUserId, oya: currentUserId });
             joinRoom(roomId);
         });
 
-        // --- 3. 部屋に参加する ---
         document.getElementById('join-room-btn').addEventListener('click', () => {
             const roomId = document.getElementById('room-code-input').value.toUpperCase();
-            if(!roomId) return;
-            joinRoom(roomId);
+            if(roomId) joinRoom(roomId);
         });
 
         async function joinRoom(roomId) {
-            const roomRef = ref(db, `rooms/${roomId}`);
-            const roomSnap = await get(roomRef);
-            
-            if (!roomSnap.exists()) {
-                return alert("その部屋は見つかりません！");
-            }
+            const roomSnap = await get(ref(db, `rooms/${roomId}`));
+            if (!roomSnap.exists()) return alert("その部屋は見つかりません！");
 
             currentRoomId = roomId;
             document.getElementById('room-title').innerText = `Room: ${roomId}`;
             
-            // 招待URLを生成して表示
-            const inviteUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-            document.getElementById('invite-url').innerText = inviteUrl;
-            document.getElementById('invite-url').onclick = () => {
-                navigator.clipboard.writeText(inviteUrl);
-                alert("URLをコピーしました！Discord等に貼り付けて友達を呼べます！");
-            };
+            const url = new URL(window.location.href);
+            url.searchParams.set('room', roomId);
+            document.getElementById('invite-url').innerText = url.href;
+            document.getElementById('invite-url').onclick = () => { navigator.clipboard.writeText(url.href); alert("URLをコピーしました！"); };
 
-            // 自分が部屋に入ったことを登録し、「切断時に自動で消える」設定をする
             const myPlayerRef = ref(db, `rooms/${roomId}/players/${currentUserId}`);
             await set(myPlayerRef, userData);
-            onDisconnect(myPlayerRef).remove(); // 魔法の一行：ブラウザを閉じたら消える！
+            onDisconnect(myPlayerRef).remove();
 
-            showScreen('room-screen');
             listenToRoom(roomId);
         }
 
-        // --- 4. 部屋の監視（リアルタイム同期） ---
+        // --- 3. 部屋の監視（ゲーム進行） ---
         function listenToRoom(roomId) {
-            const roomRef = ref(db, `rooms/${roomId}`);
-            
-            onValue(roomRef, (snapshot) => {
+            onValue(ref(db, `rooms/${roomId}`), (snapshot) => {
                 const data = snapshot.val();
-                if (!data) {
-                    alert("部屋が解散されました");
-                    showScreen('lobby-screen');
-                    return;
-                }
+                if (!data) { alert("部屋が解散されました"); window.location.search = ""; return; }
 
-                // プレイヤーリストの描画
-                const usersDiv = document.getElementById('room-users');
-                usersDiv.innerHTML = '';
                 const players = data.players || {};
+                isHost = (data.host === currentUserId);
                 
-                // もしホストが抜けていたら、残っている一番上の人を新しいホストにする
-                if (!players[data.host]) {
-                    const remainingPlayers = Object.keys(players);
-                    if (remainingPlayers.length > 0) {
-                        data.host = remainingPlayers[0];
-                        update(roomRef, { host: data.host });
-                    }
+                // ホストが抜けた場合の自動引き継ぎ
+                if (!players[data.host] && isHost) {
+                    const remaining = Object.keys(players);
+                    if (remaining.length > 0) update(ref(db, `rooms/${roomId}`), { host: remaining[0], oya: remaining[0] });
                 }
 
-                for (const [uid, player] of Object.entries(players)) {
-                    const isHost = (uid === data.host);
-                    usersDiv.innerHTML += `
-                        <div class="list-item">
-                            <span>${player.emoji}</span> <span>${player.name}</span>
-                            ${isHost ? '<span class="host-crown">👑親</span>' : ''}
-                            <span style="margin-left:auto; font-size:12px; color:#ffd700;">🪙 ${player.coins}</span>
-                        </div>
-                    `;
+                // UIの出し分け
+                if (data.status === 'playing') {
+                    showScreen('game-screen');
+                    renderGameBoard(data, players);
+                } else {
+                    showScreen('room-screen');
+                    renderWaitingRoom(data, players);
                 }
-
-                // 自分へのUI切り替え（ホストかどうか）
-                const isMyHost = (data.host === currentUserId);
-                document.getElementById('start-game-btn').classList.toggle('hidden', !isMyHost);
-                document.getElementById('waiting-msg').classList.toggle('hidden', isMyHost);
             });
         }
 
-        // --- 5. 退出処理 ---
-        document.getElementById('leave-room-btn').addEventListener('click', async () => {
-            if (currentRoomId) {
-                // データベースから自分を消す
-                await remove(ref(db, `rooms/${currentRoomId}/players/${currentUserId}`));
-                currentRoomId = null;
+        function renderWaitingRoom(data, players) {
+            const usersDiv = document.getElementById('room-users');
+            usersDiv.innerHTML = '';
+            for (const [uid, player] of Object.entries(players)) {
+                usersDiv.innerHTML += `<div class="list-item"><span>${player.emoji}</span> <span>${player.name}</span>
+                    ${uid === data.host ? '<span class="host-badge">ホスト</span>' : ''}</div>`;
             }
-            showScreen('lobby-screen');
+            document.getElementById('start-game-btn').classList.toggle('hidden', !isHost);
+            document.getElementById('waiting-msg').classList.toggle('hidden', isHost);
+        }
+
+        function renderGameBoard(data, players) {
+            const gameDiv = document.getElementById('game-players');
+            gameDiv.innerHTML = '';
+            document.getElementById('back-to-room-btn').classList.toggle('hidden', !isHost);
+
+            let mainDice = [0,0,0];
+            let isSomeoneRolling = false;
+
+            for (const [uid, player] of Object.entries(players)) {
+                const isOya = (uid === data.oya);
+                const diceStr = player.dice[0] !== 0 ? `🎲 ${player.dice.join(', ')}` : '待機中...';
+                if (player.isRolling) isSomeoneRolling = true;
+                if (uid === currentUserId) mainDice = player.dice; // 自分のサイコロ情報を保持
+
+                gameDiv.innerHTML += `
+                    <div class="list-item">
+                        <span>${player.emoji}</span> <span>${player.name}</span>
+                        ${isOya ? '<span class="oya-badge">親</span>' : ''}
+                        <span style="margin-left:auto; font-weight:bold; color:#60a5fa;">${player.isRolling ? '振っています...' : diceStr}</span>
+                    </div>`;
+            }
+
+            // 中央の巨大サイコロアニメーションの制御
+            const d1 = document.getElementById('dice1'), d2 = document.getElementById('dice2'), d3 = document.getElementById('dice3');
+            if (isSomeoneRolling) {
+                d1.classList.add('rolling'); d2.classList.add('rolling'); d3.classList.add('rolling');
+                d1.innerText = '🎲'; d2.innerText = '🎲'; d3.innerText = '🎲';
+            } else {
+                d1.classList.remove('rolling'); d2.classList.remove('rolling'); d3.classList.remove('rolling');
+                d1.innerText = diceFaces[mainDice[0]];
+                d2.innerText = diceFaces[mainDice[1]];
+                d3.innerText = diceFaces[mainDice[2]];
+            }
+        }
+
+        // --- 4. ゲームアクション ---
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            update(ref(db, `rooms/${currentRoomId}`), { status: 'playing' });
         });
 
+        document.getElementById('back-to-room-btn').addEventListener('click', () => {
+            // 全員のサイコロをリセットして待機室へ
+            update(ref(db, `rooms/${currentRoomId}`), { status: 'waiting' });
+            get(ref(db, `rooms/${currentRoomId}/players`)).then(snap => {
+                snap.forEach(child => { update(child.ref, { dice: [0,0,0], isRolling: false }); });
+            });
+        });
+
+        document.getElementById('roll-dice-btn').addEventListener('click', async () => {
+            const myPlayerRef = ref(db, `rooms/${currentRoomId}/players/${currentUserId}`);
+            // 転がっているアニメーションを全員に通知
+            await update(myPlayerRef, { isRolling: true });
+            
+            setTimeout(async () => {
+                // 1秒後に結果を通知
+                const d1 = Math.floor(Math.random() * 6) + 1;
+                const d2 = Math.floor(Math.random() * 6) + 1;
+                const d3 = Math.floor(Math.random() * 6) + 1;
+                await update(myPlayerRef, { dice: [d1, d2, d3], isRolling: false });
+            }, 800);
+        });
+
+        // 退出処理
+        document.getElementById('leave-room-btn').addEventListener('click', async () => {
+            if (currentRoomId) await remove(ref(db, `rooms/${currentRoomId}/players/${currentUserId}`));
+            window.location.search = ""; // URLパラメータを消してリロード
+        });
     </script>
 </body>
 </html>
