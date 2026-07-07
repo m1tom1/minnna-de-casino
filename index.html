@@ -16,7 +16,7 @@
         .vol-btn { background: #4b5563; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .danger-bg { background: #ef4444 !important; } .danger-bg:hover { background: #dc2626 !important; }
 
-        /* メインコンテンツを中央に配置するラッパー（ヘッダーの分下げる） */
+        /* メインコンテンツを中央に配置するラッパー */
         .main-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding-top: 60px; box-sizing: border-box; }
         .container { background-color: #242631; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 90%; max-width: 500px; text-align: center; }
         
@@ -67,7 +67,7 @@
             <div style="display:flex; align-items:center; gap:5px;">
                 <span style="font-size: 16px;">🎵</span>
                 <button class="vol-btn" onclick="changeVol(-0.1)">-</button>
-                <span id="vol-disp" style="width: 20px; text-align: center; font-weight: bold;">3</span>
+                <span id="vol-disp" style="width: 20px; text-align: center; font-weight: bold;">1</span>
                 <button class="vol-btn" onclick="changeVol(0.1)">+</button>
             </div>
             <button id="hdr-copy-btn" class="sm-btn hidden" onclick="copyInviteUrl()">URLコピー 🔗</button>
@@ -180,9 +180,9 @@
 
         // --- BGMと音量設定 ---
         const bgm = document.getElementById('bgm-audio');
-        // 保存された音量を読み込み（無ければデフォルト0.3）
+        // 保存された音量を読み込み（無ければデフォルト0.1に変更して静かに）
         let savedVol = localStorage.getItem('bgmVolume');
-        let currentVol = savedVol !== null ? parseFloat(savedVol) : 0.3;
+        let currentVol = savedVol !== null ? parseFloat(savedVol) : 0.1;
         bgm.volume = currentVol;
         document.getElementById('vol-disp').innerText = Math.round(currentVol * 10);
         
@@ -284,7 +284,13 @@
         // --- 2. 部屋の作成・参加 ---
         document.getElementById('create-room-btn').addEventListener('click', async () => {
             const roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
-            await set(ref(db, `rooms/${roomId}`), { createdAt: Date.now(), chinchiro: { status: 'waiting', master: currentUserId, oya: currentUserId, players: {} } });
+            // Firebaseが空のplayers: {}を消去しないよう、ダミーデータで初期化する
+            await set(ref(db, `rooms/${roomId}`), { 
+                createdAt: Date.now(), 
+                chinchiro: { status: 'waiting', master: currentUserId, oya: currentUserId, players: { "dummy": true } } 
+            });
+            // その後すぐにダミーデータを消す
+            await remove(ref(db, `rooms/${roomId}/chinchiro/players/dummy`));
             joinRoom(roomId);
         });
 
@@ -325,7 +331,9 @@
                 
                 // 自分が卓に座っているかで画面を振り分ける
                 const chin = data.chinchiro || { players: {} };
-                const pList = Object.keys(chin.players || {});
+                // Firebaseが空オブジェクトを消去する対策として、undefinedの場合は空オブジェクトを補完
+                const playersObj = chin.players || {};
+                const pList = Object.keys(playersObj);
                 
                 if (pList.includes(currentUserId)) {
                     showScreen('chinchiro-screen');
@@ -345,11 +353,13 @@
             }
             
             const chin = data.chinchiro || { status: 'waiting', players: {} };
-            const pCount = Object.keys(chin.players || {}).length;
+            // BUG対策: chin.playersがundefinedになるケースを防ぐ
+            const playersObj = chin.players || {};
+            const pCount = Object.keys(playersObj).length;
             document.getElementById('chinchiro-status-text').innerText = `${chin.status === 'waiting' ? '待機中' : '進行中'} (${pCount}人)`;
             
             const isPlaying = (chin.status !== 'waiting');
-            const amIPlaying = !!chin.players[currentUserId];
+            const amIPlaying = !!playersObj[currentUserId];
             document.getElementById('join-chinchiro-btn').innerText = amIPlaying ? "卓に戻る" : (isPlaying ? "観戦する" : "卓に参加する");
         }
 
@@ -357,7 +367,9 @@
         document.getElementById('join-chinchiro-btn').addEventListener('click', async () => {
             const chSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
             const cData = chSnap.val() || {};
-            if(!cData.players || !cData.players[currentUserId]) {
+            const playersObj = cData.players || {};
+            
+            if(!playersObj[currentUserId]) {
                 if(cData.status !== 'waiting') alert("ゲーム進行中のため観戦モードになります。");
                 const myTableRef = ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`);
                 await set(myTableRef, { bet: 0, isBetConfirmed: false, isRolling: false, yakuData: null, rollCount: 0 });
@@ -469,7 +481,7 @@
         document.getElementById('master-roll-phase-btn').addEventListener('click', async () => {
             const snap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
             const cData = snap.val();
-            let order = Object.keys(cData.players).filter(u => u !== cData.oya); order.push(cData.oya); // 親は最後
+            let order = Object.keys(cData.players || {}).filter(u => u !== cData.oya); order.push(cData.oya); // 親は最後
             await update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'playing', turnOrder: order, turnIndex: 0 });
         });
 
