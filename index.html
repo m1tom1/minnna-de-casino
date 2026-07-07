@@ -25,15 +25,17 @@
         .host-badge { background: #3f4257; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
         .oya-badge { background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; font-weight: bold;}
         
-        /* 3Dサイコロのスタイル */
-        .dice-area { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
-        .dice { font-size: 50px; width: 60px; height: 60px; background: white; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: black; box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.5); transform-style: preserve-3d; }
-        .rolling { animation: roll-animation 0.8s infinite linear; }
-        @keyframes roll-animation {
-            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateY(0); }
-            50% { transform: rotateX(180deg) rotateY(180deg) rotateZ(90deg) translateY(-20px); }
-            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg) translateY(0); }
-        }
+        /* 本格3Dサイコロのスタイル */
+        .dice-area { display: flex; justify-content: center; gap: 20px; margin: 30px 0; perspective: 500px; }
+        .dice-3d { width: 60px; height: 60px; position: relative; transform-style: preserve-3d; transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1); }
+        .face { position: absolute; width: 60px; height: 60px; background: white; color: black; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 40px; border: 1px solid #ccc; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        /* サイコロを箱にする */
+        .front  { transform: translateZ(30px); }
+        .back   { transform: rotateY(180deg) translateZ(30px); }
+        .right  { transform: rotateY(90deg) translateZ(30px); }
+        .left   { transform: rotateY(-90deg) translateZ(30px); }
+        .top    { transform: rotateX(90deg) translateZ(30px); }
+        .bottom { transform: rotateX(-90deg) translateZ(30px); }
     </style>
 </head>
 <body>
@@ -82,9 +84,15 @@
             </div>
 
             <div class="dice-area" id="dice-area">
-                <div class="dice" id="dice1">🎲</div>
-                <div class="dice" id="dice2">🎲</div>
-                <div class="dice" id="dice3">🎲</div>
+                <div class="dice-3d" id="dice1-3d">
+                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
+                </div>
+                <div class="dice-3d" id="dice2-3d">
+                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
+                </div>
+                <div class="dice-3d" id="dice3-3d">
+                    <div class="face front">⚀</div><div class="face back">⚅</div><div class="face right">⚂</div><div class="face left">⚃</div><div class="face top">⚄</div><div class="face bottom">⚁</div>
+                </div>
             </div>
             <div id="game-status-text" style="font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 20px;">ベットを受付中...</div>
 
@@ -312,6 +320,73 @@
             if (currentRoomId) await remove(ref(db, `rooms/${currentRoomId}/players/${currentUserId}`));
             window.location.search = ""; // URLパラメータを消してリロード
         });
+
+        // --- 裏画面（別タブ）から戻ってきたときの自動再接続 ---
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && currentRoomId) {
+                setTimeout(() => joinRoom(currentRoomId), 1000);
+            }
+        });
+
+        // --- チンチロの役判定ロジック ---
+        function evaluateYaku(d1, d2, d3) {
+            const dice = [d1, d2, d3].sort((a, b) => a - b);
+            const str = dice.join('');
+            if (str === '111') return { name: 'ピンゾロ', multiplier: 5 };
+            if (dice[0] === dice[1] && dice[1] === dice[2]) return { name: 'ゾロ目', multiplier: 3 };
+            if (str === '456') return { name: 'シゴロ', multiplier: 2 };
+            if (str === '123') return { name: 'ヒフミ (罰金)', multiplier: -2 };
+            if (dice[0] === dice[1]) return { name: `出目 ${dice[2]}`, multiplier: 2, value: dice[2] };
+            if (dice[1] === dice[2]) return { name: `出目 ${dice[0]}`, multiplier: 2, value: dice[0] };
+            if (dice[0] === dice[2]) return { name: `出目 ${dice[1]}`, multiplier: 2, value: dice[1] };
+            return { name: '目無し', multiplier: 0, value: 0 };
+        }
+
+        // --- 3Dサイコロの回転処理 ---
+        function roll3DDice(diceId, resultNum) {
+            const diceEl = document.getElementById(diceId);
+            // ランダムに何回転かさせるためのベース角度（720度〜1080度）
+            const spinsX = (Math.floor(Math.random() * 2) + 2) * 360; 
+            const spinsY = (Math.floor(Math.random() * 2) + 2) * 360;
+            
+            let rotX = 0, rotY = 0;
+            // 出目に合わせた最終的な角度を計算
+            switch(resultNum) {
+                case 1: rotX = 0; rotY = 0; break;          // front ⚀
+                case 2: rotX = 90; rotY = 0; break;         // bottom ⚁
+                case 3: rotX = 0; rotY = -90; break;        // right ⚂
+                case 4: rotX = 0; rotY = 90; break;         // left ⚃
+                case 5: rotX = -90; rotY = 0; break;        // top ⚄
+                case 6: rotX = 0; rotY = 180; break;        // back ⚅
+            }
+            // 回転アニメーション実行
+            diceEl.style.transform = `rotateX(${spinsX + rotX}deg) rotateY(${spinsY + rotY}deg)`;
+        }
+
+        // 既存のサイコロボタンの処理を上書き
+        document.getElementById('roll-dice-btn').addEventListener('click', async () => {
+            const myPlayerRef = ref(db, `rooms/${currentRoomId}/players/${currentUserId}`);
+            await update(myPlayerRef, { isRolling: true });
+            
+            // 1〜6のランダムな目を出す
+            const d1 = Math.floor(Math.random() * 6) + 1;
+            const d2 = Math.floor(Math.random() * 6) + 1;
+            const d3 = Math.floor(Math.random() * 6) + 1;
+            
+            // 3Dアニメーション実行
+            roll3DDice('dice1-3d', d1);
+            roll3DDice('dice2-3d', d2);
+            roll3DDice('dice3-3d', d3);
+            
+            // 役を判定して表示
+            const yaku = evaluateYaku(d1, d2, d3);
+            document.getElementById('game-status-text').innerText = `あなたの役: ${yaku.name}！`;
+
+            setTimeout(async () => {
+                await update(myPlayerRef, { dice: [d1, d2, d3], isRolling: false, lastYaku: yaku.name });
+            }, 1200); // 回転が終わるのを待ってからDB更新
+        });
     </script>
 </body>
 </html>
+
