@@ -16,7 +16,7 @@
         .vol-btn { background: #4b5563; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .danger-bg { background: #ef4444 !important; } .danger-bg:hover { background: #dc2626 !important; }
 
-        /* 音量ゲージ (10個のブロック) */
+        /* 音量ゲージ */
         .vol-gauge { display: flex; gap: 2px; align-items: center; }
         .vol-bar { width: 5px; height: 12px; background: #0f1115; border: 1px solid #3f4257; box-sizing: border-box; }
         .vol-bar.active { background: #ffffff; border-color: #ffffff; box-shadow: 0 0 3px rgba(255,255,255,0.8); }
@@ -76,7 +76,7 @@
         #smartphone-toggle-btn:hover { transform: scale(1.1); }
         
         #smartphone-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .phone-container { width: 320px; height: 600px; background: #1a1c23; border-radius: 40px; border: 10px solid #2d3142; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .phone-container { width: 340px; height: 650px; max-height: 95vh; background: #1a1c23; border-radius: 40px; border: 10px solid #2d3142; display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         .phone-header { background: #111; padding: 10px; text-align: center; font-size: 12px; font-weight: bold; color: #fff; display: flex; justify-content: space-between; }
         .phone-content { flex: 1; padding: 20px; overflow-y: auto; background: url('https://www.transparenttextures.com/patterns/stardust.png') #1a1c23; }
         
@@ -88,8 +88,18 @@
         .phone-home-bar { height: 5px; width: 120px; background: #fff; border-radius: 10px; margin: 15px auto; cursor: pointer; opacity: 0.5; transition: 0.2s; }
         .phone-home-bar:hover { opacity: 1; background: #ffd700; }
         
-        .app-screen { background: #242631; border-radius: 12px; padding: 15px; margin-bottom: 10px; text-align: center; border: 1px solid #3f4257; }
-        .app-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ffd700; border-bottom: 1px solid #3f4257; padding-bottom: 10px; }
+        .app-screen { background: #242631; border-radius: 12px; padding: 15px; margin-bottom: 10px; text-align: left; border: 1px solid #3f4257; min-height: 80%; }
+        .app-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #ffd700; border-bottom: 1px solid #3f4257; padding-bottom: 10px; text-align: center; }
+        
+        /* フレンドアプリ用 */
+        .friend-tabs { display: flex; border-bottom: 1px solid #3f4257; margin-bottom: 15px; }
+        .friend-tab { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; color: #9ca3af; font-size: 14px; font-weight: bold; }
+        .friend-tab.active { color: #ffd700; border-bottom: 2px solid #ffd700; }
+        .friend-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2d303f; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-online { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
+        .status-offline { background-color: #ef4444; }
+        .add-friend-input { width: calc(100% - 24px); margin-bottom: 10px; padding: 10px; }
     </style>
 </head>
 <body>
@@ -102,10 +112,9 @@
             <span id="hdr-room-info" class="hidden">🏠 <span id="hdr-room-code" style="color: #ffd700;"></span></span>
         </div>
         <div class="header-controls">
-            <div style="display:flex; align-items:center; gap:5px;">
+            <div style="display:flex; align-items:center; gap:3px;">
                 <span>🎵</span>
                 <button class="vol-btn" onclick="changeVol(-1)">-</button>
-                <!-- 10個のブロックゲージ -->
                 <div class="vol-gauge" id="vol-gauge-container">
                     <div class="vol-bar" id="vol-bar-1"></div><div class="vol-bar" id="vol-bar-2"></div><div class="vol-bar" id="vol-bar-3"></div><div class="vol-bar" id="vol-bar-4"></div><div class="vol-bar" id="vol-bar-5"></div>
                     <div class="vol-bar" id="vol-bar-6"></div><div class="vol-bar" id="vol-bar-7"></div><div class="vol-bar" id="vol-bar-8"></div><div class="vol-bar" id="vol-bar-9"></div><div class="vol-bar" id="vol-bar-10"></div>
@@ -124,7 +133,7 @@
     <div id="smartphone-overlay" class="hidden">
         <div class="phone-container">
             <div class="phone-header">
-                <span>docomo 5G</span><span>12:00</span><span>🔋 98%</span>
+                <span></span><span>12:00</span><span>🔋 98%</span>
             </div>
             
             <!-- ホーム画面 -->
@@ -138,17 +147,17 @@
                 </div>
             </div>
 
-            <!-- アプリ表示画面 (切り替わる) -->
+            <!-- アプリ表示画面 -->
             <div class="phone-content hidden" id="phone-app-screen">
                 <div class="app-screen">
                     <div class="app-title" id="app-title-text">App</div>
-                    <div id="app-body-content" style="color: #9ca3af; font-size: 14px; line-height: 1.6;">
-                        現在開発中です...<br>アップデートをお待ちください。
+                    <div id="app-body-content" style="color: #e5e7eb; font-size: 14px;">
+                        <!-- JSで動的に中身が入ります -->
                     </div>
                 </div>
             </div>
 
-            <!-- ホームバー (下からスワイプするやつ) -->
+            <!-- ホームバー -->
             <div style="background: #111; padding-bottom: 5px;">
                 <div class="phone-home-bar" onclick="togglePhone(false)"></div>
             </div>
@@ -157,6 +166,7 @@
 
     <div class="main-wrapper">
         <div class="container">
+            <!-- 各種画面 -->
             <div id="login-screen">
                 <h1>入場手続き</h1>
                 <input type="text" id="username" placeholder="名前を入力" maxlength="10">
@@ -249,6 +259,7 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // ▼▼▼ Firebase設定 ▼▼▼
         const firebaseConfig = {
             apiKey: "AIzaSyDFGxRrxG104_Dw2XTXiQwIJ0KsVxkM42w",
             authDomain: "minnna-de-casino.firebaseapp.com",
@@ -263,13 +274,14 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let myData = { emoji: '🐱', name: '', coins: 1000 };
+        let myData = { emoji: '🐱', name: '', coins: 1000, friendCode: '' };
         let currentUserId = null;
         let currentRoomId = null;
         let isTableMaster = false;
         let currentBet = 0;
         let unsubscribeRoom = null;
         let localTurnUid = null;
+        let currentFriendTab = 'list';
 
         const D_FACES = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
 
@@ -280,8 +292,6 @@
         
         function applyVol() {
             bgm.volume = volLevel / 10;
-            localStorage.setItem('bgmVolLevel', volLevel);
-            // ゲージのUI更新
             for(let i=1; i<=10; i++) {
                 const bar = document.getElementById(`vol-bar-${i}`);
                 if(bar) bar.classList.toggle('active', i <= volLevel);
@@ -294,18 +304,17 @@
             volLevel = parseInt(volLevel) + parseInt(amt);
             if(volLevel > 10) volLevel = 10; if(volLevel < 0) volLevel = 0;
             applyVol();
+            localStorage.setItem('bgmVolLevel', volLevel);
         };
 
-        // --- スマホUI制御 ---
+        // --- スマホUI・フレンド機能 ---
         window.togglePhone = (show) => {
             const overlay = document.getElementById('smartphone-overlay');
             if(show) {
                 overlay.classList.remove('hidden');
                 document.getElementById('phone-home-screen').classList.remove('hidden');
                 document.getElementById('phone-app-screen').classList.add('hidden');
-            } else {
-                overlay.classList.add('hidden');
-            }
+            } else { overlay.classList.add('hidden'); }
         };
 
         window.openApp = (appName) => {
@@ -316,17 +325,134 @@
             
             if(appName === 'bank') {
                 title.innerText = '🏦 送金アプリ';
-                body.innerHTML = '他のプレイヤーへの送金機能を<br>次回アップデートで追加予定です！';
+                body.innerHTML = '<div style="text-align:center; padding: 20px;">送金機能は<br>次回アップデートで追加予定！</div>';
             } else if(appName === 'stock') {
                 title.innerText = '📈 株価チャート';
-                body.innerHTML = 'カジノ内仮想通貨の値動きグラフと<br>売買機能を開発中です...';
+                body.innerHTML = '<div style="text-align:center; padding: 20px;">仮想通貨チャートを開発中...</div>';
             } else if(appName === 'debt') {
                 title.innerText = '💳 帝愛金融';
-                body.innerHTML = '<span style="color:#ef4444; font-weight:bold;">ペリカを借りる...</span><br><br>破産者専用の地下労働施設行き<br>契約システムを準備中です。';
+                body.innerHTML = '<div style="text-align:center; padding: 20px; color:#ef4444; font-weight:bold;">ペリカ借入システム<br>地下労働契約書 準備中...</div>';
             } else if(appName === 'friends') {
-                title.innerText = '👥 フレンドリスト';
-                body.innerHTML = 'フレンドのオンライン状況の確認と、<br>遊んでいる部屋への合流機能を<br>追加予定です！';
+                title.innerText = '👥 フレンド';
+                body.innerHTML = `
+                    <div class="friend-tabs">
+                        <div class="friend-tab active" id="tab-list" onclick="switchFriendTab('list')">リスト</div>
+                        <div class="friend-tab" id="tab-recent" onclick="switchFriendTab('recent')">最近遊んだ人</div>
+                        <div class="friend-tab" id="tab-search" onclick="switchFriendTab('search')">追加</div>
+                    </div>
+                    <div id="friend-content-area"></div>
+                `;
+                switchFriendTab('list');
             }
+        };
+
+        window.switchFriendTab = (tab) => {
+            currentFriendTab = tab;
+            ['list', 'recent', 'search'].forEach(t => document.getElementById(`tab-${t}`).classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            loadFriendData(tab);
+        };
+
+        async function loadFriendData(tab) {
+            const content = document.getElementById('friend-content-area');
+            content.innerHTML = '<div style="text-align:center;">読み込み中...</div>';
+            
+            if (tab === 'list') {
+                const fSnap = await get(ref(db, `users/${currentUserId}/friends`));
+                const friends = fSnap.val() || {};
+                const fUids = Object.keys(friends);
+                if(fUids.length === 0) return content.innerHTML = '<div style="text-align:center;">フレンドがいません</div>';
+                
+                let html = '';
+                for(let uid of fUids) {
+                    const uSnap = await get(ref(db, `users/${uid}`));
+                    if(!uSnap.exists()) continue;
+                    const u = uSnap.val();
+                    const statusClass = u.online ? 'status-online' : 'status-offline';
+                    const roomBtn = (u.online && u.currentRoom) ? `<button class="blue-btn" style="padding: 4px 8px; width: auto; font-size:12px; margin:0;" onclick="joinFriendRoom('${u.currentRoom}')">合流</button>` : '';
+                    html += `
+                        <div class="friend-item">
+                            <div style="display:flex; align-items:center;">
+                                <span class="status-dot ${statusClass}"></span>
+                                <span style="font-size:20px; margin-right:5px;">${u.emoji}</span>
+                                <div>
+                                    <div style="font-weight:bold; color:white;">${u.name}</div>
+                                    <div style="font-size:10px;">🪙 ${u.coins}</div>
+                                </div>
+                            </div>
+                            ${roomBtn}
+                        </div>
+                    `;
+                }
+                content.innerHTML = html;
+            } 
+            else if (tab === 'recent') {
+                const rSnap = await get(ref(db, `users/${currentUserId}/recentPlayers`));
+                const recents = rSnap.val() || {};
+                const rUids = Object.keys(recents).sort((a,b) => recents[b] - recents[a]); // 新しい順
+                if(rUids.length === 0) return content.innerHTML = '<div style="text-align:center;">最近遊んだ人はいません</div>';
+
+                let html = '';
+                for(let uid of rUids.slice(0, 10)) { // 最大10件
+                    const uSnap = await get(ref(db, `users/${uid}`));
+                    if(!uSnap.exists()) continue;
+                    const u = uSnap.val();
+                    html += `
+                        <div class="friend-item">
+                            <div style="display:flex; align-items:center;">
+                                <span style="font-size:20px; margin-right:5px;">${u.emoji}</span>
+                                <span style="color:white;">${u.name}</span>
+                            </div>
+                            <button class="main-btn" style="padding: 4px 8px; width: auto; font-size:12px; margin:0;" onclick="addFriend('${uid}')">追加</button>
+                        </div>
+                    `;
+                }
+                content.innerHTML = html;
+            }
+            else if (tab === 'search') {
+                content.innerHTML = `
+                    <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        <span style="font-size: 12px;">あなたのフレンドコード:</span><br>
+                        <strong style="color:#ffd700; font-size: 18px; letter-spacing: 2px;">${myData.friendCode}</strong>
+                    </div>
+                    <input type="text" id="search-code-input" class="add-friend-input" placeholder="フレンドコードを入力">
+                    <button class="blue-btn" onclick="searchFriend()">検索して追加</button>
+                `;
+            }
+        }
+
+        window.addFriend = async (uid) => {
+            await update(ref(db, `users/${currentUserId}/friends`), { [uid]: true });
+            alert("フレンドに追加しました！");
+            loadFriendData(currentFriendTab);
+        };
+
+        window.searchFriend = async () => {
+            const code = document.getElementById('search-code-input').value.toUpperCase().trim();
+            if(!code) return;
+            const usersSnap = await get(ref(db, 'users'));
+            let foundUid = null;
+            usersSnap.forEach(child => {
+                if(child.val().friendCode === code) foundUid = child.key;
+            });
+            if(foundUid) {
+                if(foundUid === currentUserId) return alert("それは自分です！");
+                await addFriend(foundUid);
+            } else {
+                alert("見つかりませんでした。");
+            }
+        };
+
+        window.joinFriendRoom = async (roomId) => {
+            if(currentRoomId === roomId) return alert("すでにその部屋にいます！");
+            if(currentRoomId) {
+                const canLeave = await attemptLeaveTable();
+                if(!canLeave) return;
+                await remove(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
+                await remove(ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`));
+            }
+            togglePhone(false);
+            joinRoom(roomId);
         };
 
         // --- 基本UI制御 ---
@@ -360,7 +486,7 @@
                 const mSnap = await get(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
                 const newCoins = mSnap.val().coins - myPData.bet;
                 await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
-                await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
+                await update(ref(db, `users/${currentUserId}`), { coins: newCoins, currentRoom: null });
                 myData.coins = newCoins;
             } else if (cData.status !== 'waiting') {
                 if (!confirm("ゲーム進行中ですが、退出しますか？")) return false;
@@ -374,6 +500,7 @@
                 const canLeave = await attemptLeaveTable();
                 if(!canLeave) return;
                 await remove(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
+                await update(ref(db, `users/${currentUserId}`), { currentRoom: null });
                 window.location.href = window.location.pathname; 
             }
         };
@@ -408,7 +535,18 @@
                 currentUserId = userCredential.user.uid;
                 const userRef = ref(db, `users/${currentUserId}`);
                 const snapshot = await get(userRef);
-                if (snapshot.exists()) myData.coins = snapshot.val().coins; else await set(userRef, myData);
+                if (snapshot.exists()) {
+                    myData.coins = snapshot.val().coins;
+                    myData.friendCode = snapshot.val().friendCode;
+                } else { 
+                    myData.friendCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    await set(userRef, myData); 
+                }
+                
+                // フレンド機能のためのステータス管理
+                update(userRef, { online: true });
+                onDisconnect(userRef).update({ online: false, currentRoom: null });
+
                 document.getElementById('my-name').innerText = myData.name; document.getElementById('my-emoji').innerText = myData.emoji;
                 document.getElementById('my-coins-home').innerText = myData.coins; document.getElementById('my-coins-game').innerText = myData.coins;
                 if (inviteRoomId) joinRoom(inviteRoomId); else showScreen('home-screen');
@@ -433,8 +571,13 @@
             if (!roomSnap.exists()) { window.history.replaceState({}, '', window.location.pathname); return alert("部屋が見つかりません！"); }
             currentRoomId = roomId; updateHeaderUI();
             const url = new URL(window.location.href); url.searchParams.set('room', roomId); window.history.replaceState({}, '', url);
+            
             const myRoomRef = ref(db, `rooms/${roomId}/members/${currentUserId}`);
             await set(myRoomRef, myData); onDisconnect(myRoomRef).remove();
+            
+            // 自分のプロフィールに現在いる部屋を記録（フレンド合流用）
+            await update(ref(db, `users/${currentUserId}`), { currentRoom: roomId });
+
             startRoomListener(roomId);
         }
 
@@ -443,6 +586,15 @@
             unsubscribeRoom = onValue(ref(db, `rooms/${roomId}`), (snapshot) => {
                 const data = snapshot.val();
                 if (!data) { alert("解散されました"); window.location.href = window.location.pathname; return; }
+                
+                // 「最近遊んだ人」の記録を更新
+                const members = data.members || {};
+                let recentUpdates = {};
+                for (const uid in members) {
+                    if (uid !== currentUserId) recentUpdates[`users/${currentUserId}/recentPlayers/${uid}`] = Date.now();
+                }
+                if(Object.keys(recentUpdates).length > 0) update(ref(db), recentUpdates);
+
                 renderRoomLobby(data);
                 const chin = data.chinchiro || { players: {} }; const playersObj = chin.players || {};
                 if (Object.keys(playersObj).includes(currentUserId)) { showScreen('chinchiro-screen'); renderChinchiroTable(chin, data.members); } 
@@ -469,11 +621,6 @@
                 await set(myTableRef, { bet: 0, isBetConfirmed: false, isRolling: false, yakuData: null, rollCount: 0 });
                 onDisconnect(myTableRef).remove();
             }
-        });
-
-        document.getElementById('leave-table-btn').addEventListener('click', async () => {
-            const canLeave = await attemptLeaveTable();
-            if(canLeave) showScreen('room-lobby-screen');
         });
 
         function getStaticDiceTransform(num) {
@@ -576,16 +723,16 @@
 
                     if (currentTurnUid === currentUserId) {
                         if(myPData.yakuData) {
-                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `${myPData.yakuData.name} が確定しました！ゲームを終了します...`;
-                            else mainMsg = `${myPData.yakuData.name} が確定しました！次の人に渡します...`;
+                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `役が確定しました！ゲームを終了します...`;
+                            else mainMsg = `役が確定しました！次の人に渡します...`;
                         } else {
                             document.getElementById('roll-dice-btn').classList.remove('hidden');
-                            if(rc === 0) { mainMsg = `あなたのターンです！ (1回目 / 最大3回)`; document.getElementById('roll-dice-btn').innerText = "サイコロを振る！"; } 
-                            else if (rc < 3) { mainMsg = `出目なし！もう一度振ってください (残り ${3-rc} 回)`; document.getElementById('roll-dice-btn').innerText = "もう一度振る！"; }
+                            if(rc === 0) { mainMsg = `あなたのターンです！<br>(1回目 / 最大3回)`; document.getElementById('roll-dice-btn').innerText = "サイコロを振る！"; } 
+                            else if (rc < 3) { mainMsg = `出目なし！もう一度振ってください<br>(残り ${3-rc} 回)`; document.getElementById('roll-dice-btn').innerText = "もう一度振る！"; }
                         }
                     } else { 
                         if(tablePlayers[currentTurnUid] && tablePlayers[currentTurnUid].yakuData) {
-                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `${tName} が ${tablePlayers[currentTurnUid].yakuData.name} でゲーム終了！`;
+                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `${tName} が役を確定させました！`;
                             else mainMsg = `${tName} の役が確定しました！`;
                         }
                         else mainMsg = `${tName} のターン (残り ${3 - rc} 回)`; 
@@ -717,23 +864,22 @@
         // --- サイコロ判定 ---
         function evaluateYaku(d1, d2, d3) {
             const d = [d1, d2, d3].sort((a, b) => a - b); const s = d.join('');
-            const faces = `${D_FACES[d[0]]}${D_FACES[d[1]]}${D_FACES[d[2]]}`;
             
-            if (s === '111') return { name: `ピンゾロ ${faces}`, rank: 4, multiplier: 5, score: 7 }; 
-            if (d[0]===d[1] && d[1]===d[2]) return { name: `${d[0]}のゾロ目 ${faces}`, rank: 3, multiplier: 3, score: d[0] };
-            if (s === '456') return { name: `シゴロ ${faces}`, rank: 2, multiplier: 2, score: 0 };
-            if (s === '123') return { name: `ヒフミ ${faces}`, rank: -1, multiplier: -2, score: 0 };
+            if (s === '111') return { name: `ピンゾロ`, rank: 4, multiplier: 5, score: 7 }; 
+            if (d[0]===d[1] && d[1]===d[2]) return { name: `${d[0]}のゾロ目`, rank: 3, multiplier: 3, score: d[0] };
+            if (s === '456') return { name: `シゴロ`, rank: 2, multiplier: 2, score: 0 };
+            if (s === '123') return { name: `ヒフミ`, rank: -1, multiplier: -2, score: 0 };
             
             let normalScore = 0;
             if (d[0]===d[1]) normalScore = d[2]; else if (d[1]===d[2]) normalScore = d[0]; else if (d[0]===d[2]) normalScore = d[1];
-            if (normalScore > 0) return { name: `${normalScore}の目 ${faces}`, rank: 1, multiplier: 2, score: normalScore };
+            if (normalScore > 0) return { name: `${normalScore}の目`, rank: 1, multiplier: 2, score: normalScore };
 
-            return { name: `目無し ${faces}`, rank: 0, multiplier: 0, score: 0 };
+            return { name: `目無し`, rank: 0, multiplier: 0, score: 0 };
         }
 
         document.getElementById('roll-dice-btn').addEventListener('click', async () => {
             const pRef = ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`);
-            document.getElementById('roll-dice-btn').classList.add('hidden');
+            document.getElementById('roll-dice-btn').classList.add('hidden'); // 連打防止
             await update(pRef, { isRolling: true });
 
             setTimeout(async () => {
@@ -751,15 +897,6 @@
 
                 if (turnEnds) {
                     await update(pRef, { yakuData: yaku });
-                    setTimeout(async () => {
-                        const currentChSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
-                        if (currentChSnap.val().turnIndex + 1 >= currentChSnap.val().turnOrder.length) {
-                            const finalRoomSnap = await get(ref(db, `rooms/${currentRoomId}`));
-                            calculateAndApplyPayout(finalRoomSnap.val());
-                        } else {
-                            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { turnIndex: currentChSnap.val().turnIndex + 1 });
-                        }
-                    }, 3000); // 3秒見せる
                 } else {
                     document.getElementById('roll-dice-btn').classList.remove('hidden');
                 }
@@ -770,10 +907,9 @@
         async function calculateAndApplyPayout(rData) {
             const members = rData.members; const cData = rData.chinchiro;
             const oyaUid = cData.oya; const oyaYaku = cData.players[oyaUid].yakuData;
-            const oyaName = members[oyaUid].name;
             
             let updates = {}; 
-            let resData = { oyaId: oyaUid, oyaName: oyaName, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
+            let resData = { oyaId: oyaUid, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
             
             for (let uid in cData.players) {
                 if(members[uid]) {
