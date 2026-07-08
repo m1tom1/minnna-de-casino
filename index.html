@@ -7,7 +7,7 @@
     <style>
         body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #1a1c23; color: #f3f4f6; margin: 0; padding: 0; }
         
-        /* グローバルヘッダー (スマホでの改行崩れ防止) */
+        /* グローバルヘッダー */
         #global-header-bar { position: fixed; top: 0; left: 0; width: 100%; background: #2d3142; padding: 8px 15px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ffd700; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .header-left { font-weight: bold; font-size: 14px; white-space: nowrap; }
         .header-controls { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
@@ -49,11 +49,11 @@
         .game-card { background: #1a1c23; border: 1px solid #3f4257; border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 15px; }
         .game-card h3 { margin: 0 0 10px 0; color: #fff; }
         
-        /* リザルト用 */
-        .result-box { background: #2d303f; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; font-size: 14px; border: 2px solid #ffd700; }
-        .result-log { color: #f3f4f6; margin-bottom: 5px; border-bottom: 1px dashed #4b5563; padding-bottom: 5px; }
-        .result-win { color: #10b981; font-weight: bold; }
-        .result-lose { color: #ef4444; font-weight: bold; }
+        /* リザルト用 (マリオパーティ風) */
+        .result-box { background: #2d303f; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .my-result-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .win-text { color: #10b981; } .lose-text { color: #ef4444; } .draw-text { color: #9ca3af; }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
 
         /* 3Dサイコロ */
         .dice-area { display: flex; justify-content: center; gap: 15px; margin: 25px 0; perspective: 600px; min-height: 60px; }
@@ -64,7 +64,6 @@
         .dot-center { grid-area: e; } .dot-top-left { grid-area: a; } .dot-top-right { grid-area: c; } .dot-middle-left { grid-area: d; } .dot-middle-right { grid-area: f; } .dot-bottom-left { grid-area: g; } .dot-bottom-right { grid-area: i; }
         .front  { transform: translateZ(30px); } .back   { transform: rotateY(180deg) translateZ(30px); } .right  { transform: rotateY(90deg) translateZ(30px); } .left   { transform: rotateY(-90deg) translateZ(30px); } .top    { transform: rotateX(90deg) translateZ(30px); } .bottom { transform: rotateX(-90deg) translateZ(30px); }
         
-        /* 回転アニメーション */
         @keyframes auto-spin { 0% { transform: rotateX(0deg) rotateY(0deg); } 100% { transform: rotateX(1080deg) rotateY(1080deg); } }
         .spinning { animation: auto-spin 1s linear infinite; transition: none !important; }
     </style>
@@ -130,19 +129,25 @@
             </div>
 
             <div id="chinchiro-screen" class="hidden">
-                <h1>🎲 チンチロ卓</h1>
+                <h1>🎲 チンチロ</h1>
                 <div class="profile-bar">
                     <div>所持: 🪙 <span id="my-coins-game"></span> コイン</div>
                     <div style="font-size: 12px; color: #9ca3af;">(進行中: <span id="game-phase-text">待機室</span>)</div>
                 </div>
 
-                <!-- リザルトエリア -->
+                <!-- 派手なリザルトエリア -->
                 <div id="result-area" class="result-box hidden">
-                    <div style="text-align: center; font-weight: bold; color: #ffd700; margin-bottom: 10px;">🏆 清算結果</div>
-                    <div id="result-logs-container"></div>
+                    <div style="text-align: center; font-weight: bold; color: #ffd700; font-size: 20px; margin-bottom: 15px;">🏆 清算結果</div>
+                    
+                    <div class="my-result-card">
+                        <div id="my-vs-text" style="font-size: 14px; margin-bottom: 8px;"></div>
+                        <div id="my-diff-text" style="font-size: 36px; font-weight: bold; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                    </div>
+
+                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 5px;">全体の動き</div>
+                    <div id="other-results-container"></div>
                 </div>
 
-                <!-- ベットエリア -->
                 <div id="betting-area" class="hidden" style="margin-bottom: 20px; background: #2d303f; padding: 15px; border-radius: 8px;">
                     <div id="bet-title-text" style="font-size: 16px; margin-bottom: 10px;">賭け金: <span id="current-bet-display" style="color: #ffd700; font-weight: bold; font-size: 20px;">0</span> コイン</div>
                     <div id="bet-controls" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
@@ -154,7 +159,6 @@
                     <button class="danger-btn hidden" onclick="cancelBet()" id="cancel-bet-btn">キャンセルする</button>
                 </div>
 
-                <!-- サイコロエリア -->
                 <div class="dice-area hidden" id="dice-area">
                     <div class="dice-3d" id="dice1-3d"><div class="face front"><div class="dot dot-center"></div></div><div class="face bottom"><div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div></div><div class="face right"><div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div></div><div class="face left"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div><div class="face top"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div><div class="face back"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div></div>
                     <div class="dice-3d" id="dice2-3d"><div class="face front"><div class="dot dot-center"></div></div><div class="face bottom"><div class="dot dot-top-left"></div><div class="dot dot-bottom-right"></div></div><div class="face right"><div class="dot dot-top-left"></div><div class="dot dot-center"></div><div class="dot dot-bottom-right"></div></div><div class="face left"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div><div class="face top"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-center"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div><div class="face back"><div class="dot dot-top-left"></div><div class="dot dot-top-right"></div><div class="dot dot-middle-left"></div><div class="dot dot-middle-right"></div><div class="dot dot-bottom-left"></div><div class="dot dot-bottom-right"></div></div></div>
@@ -163,7 +167,7 @@
 
                 <div id="game-status-text" style="font-size: 16px; font-weight: bold; color: #ffd700; margin-bottom: 20px; line-height: 1.4;"></div>
                 
-                <!-- 操作ボタン（スマホでスクロールしなくていいように上に配置） -->
+                <!-- スマホ向けに上に配置した操作ボタン -->
                 <div id="action-buttons-area" style="margin-bottom: 15px;">
                     <button class="danger-btn hidden" id="master-start-btn">ベットフェーズへ (マスター)</button>
                     <button class="blue-btn hidden" id="master-roll-phase-btn">ゲーム開始 (マスター)</button>
@@ -183,6 +187,7 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue, update, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+        // ▼▼▼ Firebase設定 ▼▼▼
         const firebaseConfig = {
             apiKey: "AIzaSyDFGxRrxG104_Dw2XTXiQwIJ0KsVxkM42w",
             authDomain: "minnna-de-casino.firebaseapp.com",
@@ -207,23 +212,20 @@
 
         const D_FACES = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
 
-        // --- BGM設定 (0〜10の整数管理) ---
+        // --- BGM設定 ---
         const bgm = document.getElementById('bgm-audio');
-        let volLevel = localStorage.getItem('bgmVolLevel');
-        volLevel = volLevel !== null ? parseInt(volLevel) : 5; // デフォルト5
-        
-        function applyVol() {
-            bgm.volume = volLevel / 10;
-            document.getElementById('vol-disp').innerText = volLevel;
-            localStorage.setItem('bgmVolLevel', volLevel);
-        }
-        applyVol();
+        let savedVol = localStorage.getItem('bgmVolume');
+        let currentVol = savedVol !== null ? parseFloat(savedVol) : 0.5; // 初期5に設定
+        bgm.volume = currentVol;
+        document.getElementById('vol-disp').innerText = Math.round(currentVol * 10);
         document.body.addEventListener('click', () => { if(bgm.paused) bgm.play().catch(()=>{}); }, {once: true});
         
         window.changeVol = (amt) => {
-            volLevel += amt;
-            if(volLevel > 10) volLevel = 10; if(volLevel < 0) volLevel = 0;
-            applyVol();
+            let v = bgm.volume + amt;
+            if(v > 1) v = 1; if(v < 0.05) v = 0;
+            bgm.volume = v;
+            localStorage.setItem('bgmVolume', v);
+            document.getElementById('vol-disp').innerText = Math.round(v * 10);
         };
 
         window.selectEmoji = (e) => { myData.emoji = e; document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('selected', b.innerText === e)); }
@@ -246,39 +248,15 @@
 
         window.copyInviteUrl = () => { navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}?room=${currentRoomId}`); alert("URLをコピーしました！"); };
         
-        // --- 途中抜けの没収処理 ---
-        async function attemptLeaveTable() {
-            const chSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
-            if(!chSnap.exists()) return true;
-            const cData = chSnap.val(); const myPData = (cData.players || {})[currentUserId];
-            
-            if (cData.status !== 'waiting' && myPData && myPData.isBetConfirmed && myPData.bet > 0) {
-                if (!confirm(`ゲーム進行中です！\n今抜けると賭け金（${myPData.bet}C）は没収されます。\n本当に抜けますか？`)) return false;
-                const mSnap = await get(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
-                const newCoins = mSnap.val().coins - myPData.bet;
-                await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
-                await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
-                myData.coins = newCoins;
-            } else if (cData.status !== 'waiting') {
-                if (!confirm("ゲーム進行中ですが、退出しますか？")) return false;
-            }
-            await remove(ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`));
-            return true;
-        }
-
         window.leaveRoomEntirely = async () => {
-            if(currentRoomId && currentUserId) {
-                const canLeave = await attemptLeaveTable();
-                if(!canLeave) return;
-                await remove(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
+            if(confirm("部屋から退出しますか？")) {
+                if (currentRoomId && currentUserId) {
+                    await remove(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
+                    await remove(ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`));
+                }
                 window.location.href = window.location.pathname; 
             }
         };
-
-        document.getElementById('leave-table-btn').addEventListener('click', async () => {
-            const canLeave = await attemptLeaveTable();
-            if(canLeave) showScreen('room-lobby-screen');
-        });
 
         // --- ログイン ---
         async function init() {
@@ -361,7 +339,26 @@
             document.getElementById('join-chinchiro-btn').innerText = amIPlaying ? "卓に戻る" : ((chin.status !== 'waiting') ? "観戦する" : "卓に参加する");
         }
 
-        // --- チンチロ卓 ---
+        // --- 途中抜けの没収処理 ---
+        async function attemptLeaveTable() {
+            const chSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
+            if(!chSnap.exists()) return true;
+            const cData = chSnap.val(); const myPData = (cData.players || {})[currentUserId];
+            
+            if (cData.status !== 'waiting' && myPData && myPData.isBetConfirmed && myPData.bet > 0) {
+                if (!confirm(`ゲーム進行中です！\n今抜けると賭け金（${myPData.bet}C）は没収されます。\n本当に抜けますか？`)) return false;
+                const mSnap = await get(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`));
+                const newCoins = mSnap.val().coins - myPData.bet;
+                await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
+                await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
+                myData.coins = newCoins;
+            } else if (cData.status !== 'waiting') {
+                if (!confirm("ゲーム進行中ですが、退出しますか？")) return false;
+            }
+            await remove(ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`));
+            return true;
+        }
+
         document.getElementById('join-chinchiro-btn').addEventListener('click', async () => {
             const chSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
             const cData = chSnap.val() || {}; const playersObj = cData.players || {};
@@ -373,15 +370,31 @@
             }
         });
 
-        // アニメーションなしの絶対角度指定（巻き戻り防止）
+        document.getElementById('leave-table-btn').addEventListener('click', async () => {
+            const canLeave = await attemptLeaveTable();
+            if(canLeave) showScreen('room-lobby-screen');
+        });
+
         function getStaticDiceTransform(num) {
             let fx=0, fy=0; switch(num){ case 1:break; case 2:fx=90;break; case 3:fy=-90;break; case 4:fy=90;break; case 5:fx=-90;break; case 6:fy=180;break; }
             return `rotateX(${fx}deg) rotateY(${fy}deg)`;
         }
 
+        function resetDiceVisual() {
+            [1,2,3].forEach(i => {
+                const el = document.getElementById(`dice${i}-3d`);
+                el.classList.remove('spinning'); el.style.transition = 'none';
+                el.style.transform = getStaticDiceTransform(1);
+                void el.offsetWidth; el.style.transition = 'transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            });
+        }
+
         function renderChinchiroTable(chinchiroData, allMembers) {
             if (!chinchiroData) return;
-            const tablePlayers = chinchiroData.players || {}; const pList = Object.keys(tablePlayers);
+            const tablePlayers = chinchiroData.players || {}; 
+            // 退出して members から消えた人は表示しない
+            const pList = Object.keys(tablePlayers).filter(uid => allMembers[uid]);
+
             isTableMaster = (chinchiroData.master === currentUserId);
             if (!pList.includes(chinchiroData.master) && pList.length > 0 && !isTableMaster) {
                 if (pList[0] === currentUserId) update(ref(db, `rooms/${currentRoomId}/chinchiro`), { master: currentUserId, oya: currentUserId });
@@ -399,6 +412,8 @@
                 if (isTableMaster && pList.length > 1) document.getElementById('master-start-btn').classList.remove('hidden');
                 mainMsg = "参加者を待っています...";
                 document.getElementById('my-coins-game').innerText = myData.coins;
+                document.getElementById('dice-area').classList.remove('hidden');
+                resetDiceVisual(); 
             } 
             else if (status === 'betting') {
                 localTurnUid = null;
@@ -435,14 +450,18 @@
             }
             else if (status === 'playing') {
                 document.getElementById('dice-area').classList.remove('hidden');
-                localTurnUid = currentTurnUid;
+                
+                if (localTurnUid !== currentTurnUid) {
+                    localTurnUid = currentTurnUid;
+                    resetDiceVisual();
+                }
+
                 const tName = allMembers[currentTurnUid] ? allMembers[currentTurnUid].name : '誰か';
                 const rc = tablePlayers[currentTurnUid] ? tablePlayers[currentTurnUid].rollCount : 0;
                 
-                // サイコロの同期
                 let diceToShow = [1, 1, 1];
                 if (tablePlayers[currentTurnUid] && tablePlayers[currentTurnUid].finalDice) { diceToShow = tablePlayers[currentTurnUid].finalDice; } 
-                else if (chinchiroData.lastDice) { diceToShow = chinchiroData.lastDice; } // 前の人の目を残す
+                else if (chinchiroData.lastDice) { diceToShow = chinchiroData.lastDice; } 
 
                 if (tablePlayers[currentTurnUid] && tablePlayers[currentTurnUid].isRolling) {
                     mainMsg = `${tName} がサイコロを振っています...`;
@@ -450,23 +469,25 @@
                 } else {
                     [1,2,3].forEach(i => {
                         const el = document.getElementById(`dice${i}-3d`);
-                        el.classList.remove('spinning');
-                        el.style.transition = 'none';
+                        el.classList.remove('spinning'); el.style.transition = 'none';
                         el.style.transform = getStaticDiceTransform(diceToShow[i-1]);
-                        void el.offsetWidth;
-                        el.style.transition = 'transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1)';
+                        void el.offsetWidth; el.style.transition = 'transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1)';
                     });
 
                     if (currentTurnUid === currentUserId) {
-                        if(tablePlayers[currentTurnUid].yakuData) {
-                            mainMsg = `役が確定しました！次の人に渡します...`;
+                        if(myPData.yakuData) {
+                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `${myPData.yakuData.name} が確定しました！ゲームを終了します...`;
+                            else mainMsg = `${myPData.yakuData.name} が確定しました！次の人に渡します...`;
                         } else {
                             document.getElementById('roll-dice-btn').classList.remove('hidden');
-                            if(rc === 0) { mainMsg = `あなたのターンです！<br>(1回目 / 最大3回)`; document.getElementById('roll-dice-btn').innerText = "サイコロを振る！"; } 
-                            else if (rc < 3) { mainMsg = `出目なし！もう一度振ってください<br>(残り ${3-rc} 回)`; document.getElementById('roll-dice-btn').innerText = "もう一度振る！"; }
+                            if(rc === 0) { mainMsg = `あなたのターンです！ (残り 3 回)`; document.getElementById('roll-dice-btn').innerText = "サイコロを振る！"; } 
+                            else if (rc < 3) { mainMsg = `出目なし！もう一度振ってください (残り ${3-rc} 回)`; document.getElementById('roll-dice-btn').innerText = "もう一度振る！"; }
                         }
                     } else { 
-                        if(tablePlayers[currentTurnUid].yakuData) mainMsg = `${tName} の役が確定しました！`;
+                        if(tablePlayers[currentTurnUid] && tablePlayers[currentTurnUid].yakuData) {
+                            if (chinchiroData.turnIndex + 1 >= chinchiroData.turnOrder.length) mainMsg = `${tName} が ${tablePlayers[currentTurnUid].yakuData.name} でゲーム終了！`;
+                            else mainMsg = `${tName} の役が確定しました！`;
+                        }
                         else mainMsg = `${tName} のターン (残り ${3 - rc} 回)`; 
                     }
                 }
@@ -476,8 +497,40 @@
                 document.getElementById('result-area').classList.remove('hidden');
                 if (isTableMaster) document.getElementById('master-finish-btn').classList.remove('hidden');
 
-                const logsDiv = document.getElementById('result-logs-container'); logsDiv.innerHTML = '';
-                if(chinchiroData.resultLog) { chinchiroData.resultLog.forEach(logText => { logsDiv.innerHTML += `<div class="result-log">${logText}</div>`; }); }
+                const resData = chinchiroData.resultData;
+                if(resData) {
+                    const isOya = (currentUserId === resData.oyaId);
+                    let myDiff = resData.myDiffs[currentUserId] || 0;
+                    
+                    let vsText = "";
+                    if (isOya) vsText = `親 (${resData.oyaYaku}) としての総収支`;
+                    else vsText = `子 (${resData.playerYakus[currentUserId] || "不明"}) VS 親 (${resData.oyaYaku})`;
+
+                    let diffText = ""; let diffClass = "";
+                    if (myDiff > 0) { diffText = `+${myDiff} 🪙`; diffClass = "win-text"; }
+                    else if (myDiff < 0) { diffText = `${myDiff} 🪙`; diffClass = "lose-text"; }
+                    else { diffText = `±0 🪙`; diffClass = "draw-text"; }
+
+                    document.getElementById('my-vs-text').innerText = vsText;
+                    const diffEl = document.getElementById('my-diff-text');
+                    diffEl.innerText = diffText; diffEl.className = diffClass;
+                    diffEl.style.animation = 'none'; void diffEl.offsetWidth; diffEl.style.animation = 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+                    const othersDiv = document.getElementById('other-results-container');
+                    othersDiv.innerHTML = '';
+                    for (const uid in resData.myDiffs) {
+                        if (uid === currentUserId) continue; // 自分以外
+                        const name = allMembers[uid] ? allMembers[uid].name : "不明";
+                        const yaku = resData.playerYakus[uid] || "抜けたプレイヤー";
+                        const diff = resData.myDiffs[uid];
+                        let dTxt = diff > 0 ? `+${diff}` : (diff < 0 ? `${diff}` : "±0");
+                        let dCol = diff > 0 ? "#10b981" : (diff < 0 ? "#ef4444" : "#9ca3af");
+                        othersDiv.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:4px; border-bottom:1px solid #3f4257; padding-bottom:4px;">
+                            <span>${name} <span style="font-size:10px; color:#9ca3af;">(${yaku})</span></span>
+                            <span style="color:${dCol}; font-weight:bold;">${dTxt} 🪙</span>
+                        </div>`;
+                    }
+                }
             }
 
             document.getElementById('game-status-text').innerHTML = mainMsg;
@@ -491,9 +544,8 @@
                 if (status === 'playing' && uid === currentTurnUid) badges += `<span class="badge bg-turn">ターン</span> `;
 
                 let st = "";
-                // リスト側のコインも引いておく
                 let listCoins = uData.coins;
-                if (status !== 'waiting' && pData.isBetConfirmed && uid !== chinchiroData.oya) { listCoins -= pData.bet; }
+                if (status !== 'waiting' && status !== 'payout' && pData.isBetConfirmed && uid !== chinchiroData.oya) { listCoins -= pData.bet; }
 
                 if (status === 'betting' && uid !== chinchiroData.oya) st = pData.isBetConfirmed ? `<span class="badge bg-done">ベット完了 (${pData.bet}C)</span>` : "考え中...";
                 else if (status === 'playing' || status === 'payout') st = pData.yakuData ? `<span style="color:#10b981;">${pData.yakuData.name}</span>` : "順番待ち";
@@ -508,20 +560,26 @@
 
         // --- マスター進行管理 ---
         document.getElementById('master-start-btn').addEventListener('click', () => {
-            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'betting', resultLog: null });
+            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'betting', resultData: null });
             get(ref(db, `rooms/${currentRoomId}/chinchiro/players`)).then(snap => { snap.forEach(c => update(c.ref, { bet: 0, isBetConfirmed: false, rollCount: 0, yakuData: null, finalDice: null })); });
             resetBet();
         });
 
         document.getElementById('master-roll-phase-btn').addEventListener('click', async () => {
             const snap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
-            let order = Object.keys(snap.val().players || {}).filter(u => u !== snap.val().oya); order.push(snap.val().oya);
+            const cData = snap.val();
+            // 参加していない人（undefinedの抜け殻）をフィルターする
+            const roomMembersSnap = await get(ref(db, `rooms/${currentRoomId}/members`));
+            const activeMembers = roomMembersSnap.val() || {};
+            
+            let order = Object.keys(cData.players || {}).filter(u => u !== cData.oya && activeMembers[u]); 
+            if(activeMembers[cData.oya]) order.push(cData.oya); // 親は最後
             
             let updates = {};
             updates[`rooms/${currentRoomId}/chinchiro/status`] = 'playing';
             updates[`rooms/${currentRoomId}/chinchiro/turnOrder`] = order;
             updates[`rooms/${currentRoomId}/chinchiro/turnIndex`] = 0;
-            updates[`rooms/${currentRoomId}/chinchiro/lastDice`] = null; // リセット
+            updates[`rooms/${currentRoomId}/chinchiro/lastDice`] = null; 
             order.forEach(uid => {
                 updates[`rooms/${currentRoomId}/chinchiro/players/${uid}/rollCount`] = 0;
                 updates[`rooms/${currentRoomId}/chinchiro/players/${uid}/yakuData`] = null;
@@ -533,9 +591,15 @@
 
         document.getElementById('master-finish-btn').addEventListener('click', async () => {
             const snap = await get(ref(db, `rooms/${currentRoomId}`));
-            const pList = Object.keys(snap.val().chinchiro.players);
-            const currentOyaIdx = pList.indexOf(snap.val().chinchiro.oya);
-            const nextOya = pList[(currentOyaIdx + 1) % pList.length];
+            const data = snap.val();
+            const activeMembers = data.members || {};
+            
+            const pList = Object.keys(data.chinchiro.players).filter(u => activeMembers[u]);
+            let nextOya = data.chinchiro.oya;
+            if(pList.length > 0) {
+                const currentOyaIdx = pList.indexOf(data.chinchiro.oya);
+                nextOya = pList[(currentOyaIdx + 1) % pList.length];
+            }
 
             update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'waiting', oya: nextOya });
             get(ref(db, `rooms/${currentRoomId}/chinchiro/players`)).then(s => { s.forEach(c => update(c.ref, { yakuData: null, isRolling: false, finalDice: null })); });
@@ -559,13 +623,13 @@
             if (s === '111') return { name: `ピンゾロ ${faces}`, rank: 4, multiplier: 5, score: 7 }; 
             if (d[0]===d[1] && d[1]===d[2]) return { name: `${d[0]}のゾロ目 ${faces}`, rank: 3, multiplier: 3, score: d[0] };
             if (s === '456') return { name: `シゴロ ${faces}`, rank: 2, multiplier: 2, score: 0 };
-            if (s === '123') return { name: `ヒフミ (罰金) ${faces}`, rank: -1, multiplier: -2, score: 0 };
+            if (s === '123') return { name: `ヒフミ ${faces}`, rank: -1, multiplier: -2, score: 0 };
             
             let normalScore = 0;
             if (d[0]===d[1]) normalScore = d[2]; else if (d[1]===d[2]) normalScore = d[0]; else if (d[0]===d[2]) normalScore = d[1];
             if (normalScore > 0) return { name: `${normalScore}の目 ${faces}`, rank: 1, multiplier: 2, score: normalScore };
 
-            return { name: `出目なし ${faces}`, rank: 0, multiplier: 0, score: 0 };
+            return { name: `目無し ${faces}`, rank: 0, multiplier: 0, score: 0 };
         }
 
         document.getElementById('roll-dice-btn').addEventListener('click', async () => {
@@ -582,76 +646,69 @@
 
                 let turnEnds = false;
                 if (yaku.rank !== 0 || newCount >= 3) turnEnds = true;
-                if (newCount >= 3 && yaku.rank === 0) yaku.name = `目無し(確定) ${D_FACES[d1]}${D_FACES[d2]}${D_FACES[d3]}`;
                 
                 await update(pRef, { isRolling: false, finalDice: [d1,d2,d3], rollCount: newCount });
-                await update(ref(db, `rooms/${currentRoomId}/chinchiro`), { lastDice: [d1, d2, d3] }); // 部屋全体に目を残す
+                await update(ref(db, `rooms/${currentRoomId}/chinchiro`), { lastDice: [d1, d2, d3] });
 
                 if (turnEnds) {
                     await update(pRef, { yakuData: yaku });
-                    // ここで3秒タメてから次の人に回す
                     setTimeout(async () => {
                         const currentChSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
                         if (currentChSnap.val().turnIndex + 1 >= currentChSnap.val().turnOrder.length) {
-                            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'payout' });
                             const finalRoomSnap = await get(ref(db, `rooms/${currentRoomId}`));
                             calculateAndApplyPayout(finalRoomSnap.val());
                         } else {
                             update(ref(db, `rooms/${currentRoomId}/chinchiro`), { turnIndex: currentChSnap.val().turnIndex + 1 });
                         }
-                    }, 3000);
+                    }, 3000); // 3秒待ってから次へ
                 } else {
                     document.getElementById('roll-dice-btn').classList.remove('hidden');
                 }
-            }, 1000); // 回転アニメーションは1秒
+            }, 1000); 
         });
 
-        // --- 7. 清算 ---
+        // --- 7. 清算 (リザルトデータ作成) ---
         async function calculateAndApplyPayout(rData) {
             const members = rData.members; const cData = rData.chinchiro;
             const oyaUid = cData.oya; const oyaYaku = cData.players[oyaUid].yakuData;
             const oyaName = members[oyaUid].name;
             
-            let updates = {}; let logs = [];
-            logs.push(`【親】${oyaName} の役: <strong>${oyaYaku.name}</strong>`);
+            let updates = {}; 
+            let resData = { oyaId: oyaUid, oyaName: oyaName, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
+            
+            for (let uid in cData.players) {
+                if(members[uid]) {
+                    resData.myDiffs[uid] = 0;
+                    resData.playerYakus[uid] = cData.players[uid].yakuData ? cData.players[uid].yakuData.name : "不明";
+                }
+            }
             for (let uid in members) updates[`rooms/${currentRoomId}/members/${uid}/coins`] = members[uid].coins;
 
             for (let uid in cData.players) {
                 if (uid === oyaUid) continue;
-                const p = cData.players[uid]; const pYaku = p.yakuData; const bet = p.bet; const pName = members[uid].name;
-                let logStr = `${pName} (${pYaku.name}): `;
+                if (!members[uid]) continue;
+                const p = cData.players[uid]; const pYaku = p.yakuData; const bet = p.bet;
+                let diff = 0;
 
-                if (pYaku.rank === -1) { 
-                    updates[`rooms/${currentRoomId}/members/${uid}/coins`] -= (bet * 2); updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] += (bet * 2); 
-                    logStr += `<span class="result-lose">負け (罰金 -${bet*2}C)</span>`;
-                }
-                else if (oyaYaku.rank === -1) { 
-                    updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] -= (bet * 2); updates[`rooms/${currentRoomId}/members/${uid}/coins`] += (bet * 2); 
-                    logStr += `<span class="result-win">親の罰金勝ち (+${bet*2}C)</span>`;
-                }
-                else if (pYaku.rank === 0) { 
-                    updates[`rooms/${currentRoomId}/members/${uid}/coins`] -= bet; updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] += bet; 
-                    logStr += `<span class="result-lose">負け (-${bet}C)</span>`;
-                }
-                else if (oyaYaku.rank === 0) { 
-                    updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] -= bet; updates[`rooms/${currentRoomId}/members/${uid}/coins`] += bet; 
-                    logStr += `<span class="result-win">勝ち (+${bet}C)</span>`;
-                }
-                else { 
-                    if (pYaku.rank > oyaYaku.rank || (pYaku.rank === oyaYaku.rank && pYaku.score > oyaYaku.score)) { 
-                        updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] -= (bet * pYaku.multiplier); updates[`rooms/${currentRoomId}/members/${uid}/coins`] += (bet * pYaku.multiplier);
-                        logStr += `<span class="result-win">勝ち (+${bet * pYaku.multiplier}C)</span>`;
-                    } else if (oyaYaku.rank > pYaku.rank || (oyaYaku.rank === pYaku.rank && oyaYaku.score > pYaku.score)) { 
-                        updates[`rooms/${currentRoomId}/members/${uid}/coins`] -= bet; updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] += bet;
-                        logStr += `<span class="result-lose">負け (-${bet}C)</span>`;
-                    } else { 
-                        logStr += `<span style="color:#9ca3af;">引き分け (±0C)</span>`;
+                if (pYaku.rank === -1) { diff = -bet * 2; }
+                else if (oyaYaku.rank === -1) { diff = bet * 2; }
+                else if (pYaku.rank === 0) { diff = -bet; }
+                else if (oyaYaku.rank === 0) { diff = bet; }
+                else {
+                    if (pYaku.rank > oyaYaku.rank || (pYaku.rank === oyaYaku.rank && pYaku.score > oyaYaku.score)) {
+                        diff = bet * pYaku.multiplier;
+                    } else if (oyaYaku.rank > pYaku.rank || (oyaYaku.rank === pYaku.rank && oyaYaku.score > pYaku.score)) {
+                        diff = -bet;
                     }
                 }
-                logs.push(logStr);
+                
+                updates[`rooms/${currentRoomId}/members/${uid}/coins`] += diff;
+                resData.myDiffs[uid] += diff;
+                updates[`rooms/${currentRoomId}/members/${oyaUid}/coins`] -= diff;
+                resData.myDiffs[oyaUid] -= diff;
             }
             
-            updates[`rooms/${currentRoomId}/chinchiro/resultLog`] = logs;
+            updates[`rooms/${currentRoomId}/chinchiro/resultData`] = resData;
             updates[`rooms/${currentRoomId}/chinchiro/status`] = 'payout';
             await update(ref(db), updates);
 
