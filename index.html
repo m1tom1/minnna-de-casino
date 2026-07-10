@@ -54,6 +54,7 @@
         .game-card { background: #1a1c23; border: 1px solid #3f4257; border-radius: 8px; padding: 15px; text-align: left; margin-bottom: 15px; }
         .game-card h3 { margin: 0 0 10px 0; color: #fff; }
         
+        /* リザルト用 */
         .result-box { background: #2d303f; padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 2px solid #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
         .my-result-card { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .win-text { color: #10b981; } .lose-text { color: #ef4444; } .draw-text { color: #9ca3af; }
@@ -67,10 +68,8 @@
         .front .dot-center { background: #ef4444; width: 16px; height: 16px; }
         .dot-center { grid-area: e; } .dot-top-left { grid-area: a; } .dot-top-right { grid-area: c; } .dot-middle-left { grid-area: d; } .dot-middle-right { grid-area: f; } .dot-bottom-left { grid-area: g; } .dot-bottom-right { grid-area: i; }
         .front  { transform: translateZ(30px); } .back   { transform: rotateY(180deg) translateZ(30px); } .right  { transform: rotateY(90deg) translateZ(30px); } .left   { transform: rotateY(-90deg) translateZ(30px); } .top    { transform: rotateX(90deg) translateZ(30px); } .bottom { transform: rotateX(-90deg) translateZ(30px); }
-        @keyframes auto-spin { 0% { transform: rotateX(0deg) rotateY(0deg); } 100% { transform: rotateX(1080deg) rotateY(1080deg); } }
-        .spinning { animation: auto-spin 1s linear infinite; transition: none !important; }
 
-        /* スマホ機能のUI */
+        /* スマホUI */
         #smartphone-toggle-btn { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: #3b82f6; color: white; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.6); border: 2px solid #fff; cursor: pointer; z-index: 1500; transition: transform 0.2s; }
         #smartphone-toggle-btn:hover { transform: scale(1.1); }
         #smartphone-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
@@ -95,14 +94,20 @@
         .status-offline { background-color: #ef4444; }
         .add-friend-input { width: calc(100% - 24px); margin-bottom: 10px; padding: 10px; }
 
-        /* スロットUI */
-        .slot-reel { width: 45px; height: 60px; background: #eee; display: flex; justify-content: center; align-items: center; font-size: 45px; font-weight: bold; color: #111; border: 1px solid #ccc; overflow: hidden; position: relative; border-radius: 4px; }
-        .slot-reel.rolling { animation: verticalBlur 0.05s infinite linear; color: #555; }
-        @keyframes verticalBlur { 0% { transform: translateY(-20px); filter: blur(2px); } 100% { transform: translateY(20px); filter: blur(2px); } }
+        /* ======== スロット用UI (ジャグラー風 3x3) ======== */
+        .slot-reel-window { width: 60px; height: 160px; background: #f8f9fa; border: 3px solid #111; border-radius: 6px; box-shadow: inset 0 10px 15px rgba(0,0,0,0.5); overflow: hidden; position: relative; }
+        .slot-reel-strip { display: flex; flex-direction: column; width: 100%; transition: transform 0.1s; }
+        .slot-symbol { height: 53.3px; display: flex; justify-content: center; align-items: center; font-size: 38px; font-weight: bold; color: #111; box-sizing: border-box; border-bottom: 1px solid rgba(0,0,0,0.05); }
         
-        #peka-lamp { width: 30px; height: 30px; background: #330000; border-radius: 50%; margin: 0 auto 15px auto; transition: 0.1s; display:flex; justify-content:center; align-items:center; }
+        /* マスカット風の緑色ブドウ */
+        .grape-icon { filter: hue-rotate(-80deg) saturate(2) brightness(1.2); }
+        /* 回転時の縦揺れブラー */
+        .slot-reel-window.rolling .slot-reel-strip { animation: verticalBlur 0.05s infinite alternate linear; filter: blur(2px); }
+        @keyframes verticalBlur { 0% { transform: translateY(-20px); } 100% { transform: translateY(20px); } }
         
-        /* 別枠用ヘッダー */
+        /* GOGOペカランプ */
+        #peka-lamp { width: 45px; height: 35px; background: #330000; border-radius: 5px; margin: 0 auto 15px auto; transition: 0.1s; display:flex; justify-content:center; align-items:center; border: 2px solid #111; }
+        
         .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     </style>
 </head>
@@ -217,33 +222,57 @@
                 </div>
             </div>
 
+            <!-- ジャグラー風 スロット画面 -->
             <div id="slot-screen" class="hidden">
                 <div class="top-action-bar">
                     <h1 style="margin:0;">🎰 スロット</h1>
-                    <button class="sm-btn danger-bg" onclick="showScreen('home-screen')" style="padding: 10px 15px; font-size: 14px;">🚪 ロビーへ戻る</button>
+                    <button class="sm-btn danger-bg" onclick="showScreen('home-screen')" style="padding: 10px 15px; font-size: 14px;">🚪 戻る</button>
                 </div>
                 
                 <div class="profile-bar">
                     <div>所持: 🪙 <span id="slot-my-coins"></span> コイン</div>
                 </div>
 
-                <div style="background: #111; padding: 30px 20px; border-radius: 8px; margin-bottom: 20px;">
+                <div style="background: #222; padding: 25px 15px; border-radius: 12px; margin-bottom: 20px; border: 4px solid #444; box-shadow: 0 10px 20px rgba(0,0,0,0.8);">
+                    
+                    <!-- ペカランプ -->
                     <div id="peka-lamp">
-                        <span style="color:#550000; font-size:8px; font-weight:bold;">GOGO</span>
+                        <span style="color:#550000; font-size:10px; font-weight:bold;">GOGO!</span>
                     </div>
                     
-                    <div style="display: flex; justify-content: center; gap: 5px; background: #fff; padding: 10px; border-radius: 5px; width: fit-content; margin: 0 auto;">
-                        <div id="reel-1" class="slot-reel">7</div>
-                        <div id="reel-2" class="slot-reel">7</div>
-                        <div id="reel-3" class="slot-reel">7</div>
+                    <!-- 3x3リール -->
+                    <div style="display: flex; justify-content: center; gap: 8px; background: #111; padding: 15px 10px; border-radius: 8px; border: 3px inset #555; width: fit-content; margin: 0 auto;">
+                        <div id="reel-window-1" class="slot-reel-window">
+                            <div id="reel-strip-1" class="slot-reel-strip">
+                                <div class="slot-symbol"><span style="color:#ef4444;">7</span></div>
+                                <div class="slot-symbol">🍒</div>
+                                <div class="slot-symbol">🔔</div>
+                            </div>
+                        </div>
+                        <div id="reel-window-2" class="slot-reel-window">
+                            <div id="reel-strip-2" class="slot-reel-strip">
+                                <div class="slot-symbol"><span class="grape-icon">🍇</span></div>
+                                <div class="slot-symbol"><span style="color:#ef4444;">7</span></div>
+                                <div class="slot-symbol">🐕️</div>
+                            </div>
+                        </div>
+                        <div id="reel-window-3" class="slot-reel-window">
+                            <div id="reel-strip-3" class="slot-reel-strip">
+                                <div class="slot-symbol">🔔</div>
+                                <div class="slot-symbol">🍒</div>
+                                <div class="slot-symbol"><span style="color:#ef4444;">7</span></div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div id="slot-message" style="margin-top: 20px; color: #0f0; font-family: monospace; font-size: 18px; text-shadow: 0 0 5px #0f0; height: 24px;">INSERT COIN</div>
+                    <div id="slot-message" style="margin-top: 20px; background:#000; color: #0f0; border: 2px inset #333; font-family: monospace; font-size: 18px; text-shadow: 0 0 5px #0f0; padding: 5px;">INSERT COIN</div>
                 </div>
 
-                <button id="slot-action-btn" class="main-btn" style="padding: 20px; font-size: 20px;">レバーON (10C)</button>
+                <!-- 1つにまとめたアクションボタン -->
+                <button id="slot-action-btn" class="main-btn" style="padding: 20px; font-size: 20px; background: linear-gradient(#ffd700, #b8860b); border: 2px solid #fff; box-shadow: 0 5px 0 #8b6508;">レバーON (10C)</button>
             </div>
 
+            <!-- チンチロ卓画面 -->
             <div id="chinchiro-screen" class="hidden">
                 <h1>🎲 チンチロ</h1>
                 <div class="profile-bar">
@@ -690,22 +719,72 @@
         }
 
         // ==========================================
-        // 🎰 スロットゲーム ロジック
+        // 🎰 スロットゲーム ロジック (ジャグラー風 3x3)
         // ==========================================
-        let slotState = 0; 
+        const SLOT_SYMBOLS = ['7', '🔔', '🍇', '🐕️', '🍒'];
+        let slotState = 0; // 0:待機, 1:左待ち, 2:中待ち, 3:右待ち
         let slotIntervals = [null, null, null];
-        let slotResult = [1, 2, 3];
+        let slotReelResults = [
+            ['7','7','7'], ['7','7','7'], ['7','7','7']
+        ];
         let slotInternalHit = 'miss';
         const SLOT_BET = 10;
+
+        function getSymbolHtml(sym) {
+            if (sym === '7') return `<span style="color: #ef4444;">7</span>`;
+            if (sym === '🍇') return `<span class="grape-icon">🍇</span>`;
+            return sym;
+        }
+
+        function generateSlotResults(hitRole) {
+            let res = [['','',''], ['','',''], ['','','']];
+            for(let i=0; i<3; i++) {
+                for(let j=0; j<3; j++) {
+                    res[i][j] = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+                }
+            }
+
+            if (hitRole !== 'miss') {
+                let sym = '';
+                if (hitRole === '7') sym = '7';
+                if (hitRole === 'bell') sym = '🔔';
+                if (hitRole === 'grape') sym = '🍇';
+                if (hitRole === 'dog') sym = '🐕️';
+                
+                if (hitRole === 'cherry') {
+                    res[0][Math.floor(Math.random() * 3)] = '🍒'; // 左リールのどこか
+                    return res;
+                }
+
+                const lines = [
+                    [[0,0], [1,0], [2,0]], // 上段
+                    [[0,1], [1,1], [2,1]], // 中段
+                    [[0,2], [1,2], [2,2]], // 下段
+                    [[0,0], [1,1], [2,2]], // 右下がり
+                    [[0,2], [1,1], [2,0]], // 右上がり
+                ];
+                const line = lines[Math.floor(Math.random() * lines.length)];
+                line.forEach(pos => { res[pos[0]][pos[1]] = sym; });
+            } else {
+                // ハズレなのに揃ってしまう事故を簡易的に防ぐ (中段だけチェック)
+                if (res[0][1] === res[1][1] && res[1][1] === res[2][1]) {
+                    res[2][1] = '🍒'; 
+                }
+            }
+            return res;
+        }
 
         document.getElementById('play-slot-btn').addEventListener('click', () => {
             showScreen('slot-screen');
             updateCoinsUI();
             slotState = 0;
             document.getElementById('slot-action-btn').innerText = `レバーON (${SLOT_BET}C)`;
-            ['reel-1','reel-2','reel-3'].forEach(id => {
-                const el = document.getElementById(id);
-                el.innerText = '7'; el.style.color = '#111';
+            [1,2,3].forEach(i => {
+                document.getElementById(`reel-strip-${i}`).innerHTML = `
+                    <div class="slot-symbol"><span style="color:#ef4444;">7</span></div>
+                    <div class="slot-symbol">🍒</div>
+                    <div class="slot-symbol">🔔</div>
+                `;
             });
             document.getElementById('slot-message').innerText = 'INSERT COIN';
             document.getElementById('peka-lamp').style.background = '#330000';
@@ -736,36 +815,29 @@
                 
                 const rand = Math.random();
                 if (rand < 0.05) slotInternalHit = '7'; 
-                else if (rand < 0.35) slotInternalHit = 'normal';
+                else if (rand < 0.15) slotInternalHit = 'grape';
+                else if (rand < 0.25) slotInternalHit = 'dog';
+                else if (rand < 0.30) slotInternalHit = 'bell';
+                else if (rand < 0.35) slotInternalHit = 'cherry';
                 else slotInternalHit = 'miss';
 
-                if (slotInternalHit === '7') slotResult = [7, 7, 7];
-                else if (slotInternalHit === 'normal') {
-                    const n = [1,2,3,4,5,6,8,9][Math.floor(Math.random()*8)];
-                    slotResult = [n, n, n];
-                } else {
-                    slotResult = [Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1];
-                    if (slotResult[0] === slotResult[1] && slotResult[1] === slotResult[2]) slotResult[2] = (slotResult[2] % 9) + 1;
-                }
+                slotReelResults = generateSlotResults(slotInternalHit);
 
-                if (slotInternalHit !== 'miss' && Math.random() < 0.25) peka();
+                if (slotInternalHit === '7' && Math.random() < 0.25) peka();
 
                 slotState = 1;
-                btn.innerText = "左を止める";
+                btn.innerText = "止める (左)";
 
-                for(let i=0; i<3; i++) {
-                    document.getElementById(`reel-${i+1}`).classList.add('rolling');
-                    slotIntervals[i] = setInterval(() => {
-                        document.getElementById(`reel-${i+1}`).innerText = Math.floor(Math.random()*9)+1;
-                    }, 40);
-                }
+                [1,2,3].forEach(i => {
+                    document.getElementById(`reel-window-${i}`).classList.add('rolling');
+                });
             } else if (slotState === 1) {
                 stopReel(1, sndBt1);
-                btn.innerText = "中を止める";
+                btn.innerText = "止める (中)";
                 slotState = 2;
             } else if (slotState === 2) {
                 stopReel(2, sndBt2);
-                btn.innerText = "右を止める";
+                btn.innerText = "止める (右)";
                 slotState = 3;
             } else if (slotState === 3) {
                 stopReel(3, sndBt3);
@@ -776,33 +848,47 @@
         });
 
         function stopReel(index, sound) {
-            clearInterval(slotIntervals[index-1]);
-            const el = document.getElementById(`reel-${index}`);
-            el.classList.remove('rolling');
-            el.innerText = slotResult[index-1];
-            if(slotResult[index-1] === 7) el.style.color = '#ef4444';
-            else el.style.color = '#111';
+            const winEl = document.getElementById(`reel-window-${index}`);
+            winEl.classList.remove('rolling');
             
-            sound.currentTime = 0; sound.play().catch(()=>{});
-            if (slotResult[index-1] === 4) { snd4.currentTime = 0; snd4.play().catch(()=>{}); }
+            const strip = document.getElementById(`reel-strip-${index}`);
+            const res = slotReelResults[index-1];
+            strip.innerHTML = `
+                <div class="slot-symbol">${getSymbolHtml(res[0])}</div>
+                <div class="slot-symbol">${getSymbolHtml(res[1])}</div>
+                <div class="slot-symbol">${getSymbolHtml(res[2])}</div>
+            `;
             
-            if (slotInternalHit !== 'miss' && Math.random() < 0.3 && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') {
+            if (res.includes('🐕️')) {
+                snd4.currentTime = 0; snd4.play().catch(()=>{});
+            } else {
+                sound.currentTime = 0; sound.play().catch(()=>{});
+            }
+            
+            if (slotInternalHit === '7' && Math.random() < 0.3 && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') {
                 peka();
             }
         }
 
         async function checkSlotWin() {
-            if (slotInternalHit !== 'miss' && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') peka();
+            if (slotInternalHit === '7' && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') peka();
 
-            if (slotResult[0] === slotResult[1] && slotResult[1] === slotResult[2]) {
-                let winCoins = (slotResult[0] === 7) ? 100 : 30; // ちびちび仕様
-                document.getElementById('slot-message').innerText = (slotResult[0] === 7) ? `777! +${winCoins}C` : `WIN! +${winCoins}C`;
+            let winCoins = 0;
+            let msg = 'LOSE...';
 
+            if (slotInternalHit === '7') { winCoins = 100; msg = '777! +100C'; }
+            else if (slotInternalHit === 'grape') { winCoins = 30; msg = '🍇 WIN! +30C'; }
+            else if (slotInternalHit === 'bell') { winCoins = 50; msg = '🔔 WIN! +50C'; }
+            else if (slotInternalHit === 'dog') { winCoins = 10; msg = '🐕️ REPLAY +10C'; }
+            else if (slotInternalHit === 'cherry') { winCoins = 10; msg = '🍒 CHERRY +10C'; }
+
+            if (winCoins > 0) {
                 const newCoins = myData.coins + winCoins;
                 myData.coins = newCoins;
                 updateCoinsUI();
                 await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
                 if(currentRoomId) await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
+                document.getElementById('slot-message').innerText = msg;
             } else {
                 document.getElementById('slot-message').innerText = 'LOSE...';
             }
@@ -1010,6 +1096,7 @@
             }
         }
 
+        // --- マスター進行管理 ---
         document.getElementById('master-start-btn').addEventListener('click', () => {
             update(ref(db, `rooms/${currentRoomId}/chinchiro`), { status: 'betting', resultData: null });
             get(ref(db, `rooms/${currentRoomId}/chinchiro/players`)).then(snap => { snap.forEach(c => update(c.ref, { bet: 0, isBetConfirmed: false, rollCount: 0, yakuData: null, finalDice: null })); });
@@ -1056,6 +1143,7 @@
             resetBet();
         });
 
+        // --- ベットとキャンセル ---
         window.addBet = (amt) => { currentBet += amt; if (currentBet > myData.coins) currentBet = myData.coins; document.getElementById('current-bet-display').innerText = currentBet; updateCoinsUI(); };
         window.resetBet = () => { currentBet = 0; document.getElementById('current-bet-display').innerText = currentBet; updateCoinsUI(); };
         window.confirmBet = async () => {
@@ -1064,6 +1152,7 @@
         };
         window.cancelBet = async () => { await update(ref(db, `rooms/${currentRoomId}/chinchiro/players/${currentUserId}`), { isBetConfirmed: false }); };
 
+        // --- サイコロ判定 ---
         function evaluateYaku(d1, d2, d3) {
             const d = [d1, d2, d3].sort((a, b) => a - b); const s = d.join('');
             
@@ -1099,28 +1188,19 @@
 
                 if (turnEnds) {
                     await update(pRef, { yakuData: yaku });
-                    setTimeout(async () => {
-                        const currentChSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
-                        if (currentChSnap.val().turnIndex + 1 >= currentChSnap.val().turnOrder.length) {
-                            const finalRoomSnap = await get(ref(db, `rooms/${currentRoomId}`));
-                            calculateAndApplyPayout(finalRoomSnap.val());
-                        } else {
-                            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { turnIndex: currentChSnap.val().turnIndex + 1 });
-                        }
-                    }, 3000);
                 } else {
                     document.getElementById('roll-dice-btn').classList.remove('hidden');
                 }
             }, 1000); 
         });
 
+        // --- 7. 清算 (リザルトデータ作成) ---
         async function calculateAndApplyPayout(rData) {
             const members = rData.members; const cData = rData.chinchiro;
             const oyaUid = cData.oya; const oyaYaku = cData.players[oyaUid].yakuData;
-            const oyaName = members[oyaUid].name;
             
             let updates = {}; 
-            let resData = { oyaId: oyaUid, oyaName: oyaName, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
+            let resData = { oyaId: oyaUid, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
             
             for (let uid in cData.players) {
                 if(members[uid]) {
