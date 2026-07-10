@@ -100,6 +100,19 @@
         .status-online { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
         .status-offline { background-color: #ef4444; }
         .add-friend-input { width: calc(100% - 24px); margin-bottom: 10px; padding: 10px; }
+
+        /* ======== スロット機能 ======== */
+        .slot-reel { width: 60px; height: 80px; background: #eee; display: flex; justify-content: center; align-items: center; font-size: 50px; font-weight: bold; border-radius: 5px; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); overflow: hidden; }
+        .slot-reel.rolling { filter: blur(2px); color: #888; }
+        .text-red { color: #ef4444; }
+        .text-black { color: #1f2937; }
+        .stop-btn { width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle, #ef4444, #990000); border: 3px solid #333; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 5px 0 #550000, inset 0 2px 5px rgba(255,255,255,0.5); font-size: 18px; text-shadow: 1px 1px 2px #000; }
+        .stop-btn:active, .stop-btn:disabled { transform: translateY(5px); box-shadow: 0 0 0 #550000; }
+        .stop-btn:disabled { filter: grayscale(1); cursor: not-allowed; }
+        
+        @keyframes zoomIn { 0% { transform: scale(3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes flash { 0% { background: rgba(255,255,255,0.8); } 100% { background: rgba(0,0,0,0.8); } }
+        .cutin-bg { animation: flash 0.1s alternate 5; background: rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -126,17 +139,14 @@
         </div>
     </div>
 
-    <!-- スマホ起動ボタン -->
     <div id="smartphone-toggle-btn" onclick="togglePhone(true)">📱</div>
 
-    <!-- スマホ オーバーレイUI -->
     <div id="smartphone-overlay" class="hidden">
         <div class="phone-container">
             <div class="phone-header">
                 <span></span><span>12:00</span><span>🔋 98%</span>
             </div>
             
-            <!-- ホーム画面 -->
             <div class="phone-content" id="phone-home-screen">
                 <div style="font-size: 24px; font-weight: bold; text-align: center; margin-top: 10px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Home</div>
                 <div class="app-grid">
@@ -147,17 +157,13 @@
                 </div>
             </div>
 
-            <!-- アプリ表示画面 -->
             <div class="phone-content hidden" id="phone-app-screen">
                 <div class="app-screen">
                     <div class="app-title" id="app-title-text">App</div>
-                    <div id="app-body-content" style="color: #e5e7eb; font-size: 14px;">
-                        <!-- JSで動的に中身が入ります -->
-                    </div>
+                    <div id="app-body-content" style="color: #e5e7eb; font-size: 14px;"></div>
                 </div>
             </div>
 
-            <!-- ホームバー -->
             <div style="background: #111; padding-bottom: 5px;">
                 <div class="phone-home-bar" onclick="togglePhone(false)"></div>
             </div>
@@ -166,7 +172,6 @@
 
     <div class="main-wrapper">
         <div class="container">
-            <!-- 各種画面 -->
             <div id="login-screen">
                 <h1>入場手続き</h1>
                 <input type="text" id="username" placeholder="名前を入力" maxlength="10">
@@ -182,17 +187,34 @@
             <div id="home-screen" class="hidden">
                 <h1>ホーム</h1>
                 <div class="profile-bar">
-                    <div><span id="my-emoji"></span> <span id="my-name"></span></div>
+                    <div>
+                        <span id="my-emoji"></span> <span id="my-name"></span>
+                        <button onclick="changeName()" style="background:none; border:none; color:#ffd700; cursor:pointer; margin-left:5px;">✏️</button>
+                    </div>
                     <div style="color: #ffd700;">🪙 <span id="my-coins-home"></span> コイン</div>
                 </div>
                 <button class="main-btn" id="create-room-btn">🌟 新しく部屋を作る</button>
                 <div class="section-title">合言葉で参加</div>
                 <input type="text" id="room-code-input" placeholder="部屋コードを入力">
                 <button class="main-btn" id="join-room-btn" style="background-color: #3b82f6; color: white;">入室する</button>
+                
+                <div class="section-title" style="margin-top: 30px;">1人用ゲーム</div>
+                <div class="game-card">
+                    <h3>🎰 スロット</h3>
+                    <p style="font-size: 12px; color: #9ca3af;">1回100コインで一攫千金！</p>
+                    <button class="main-btn" id="play-slot-btn" style="padding: 10px; background-color: #f59e0b; color: white;">スロットを回す</button>
+                </div>
             </div>
 
             <div id="room-lobby-screen" class="hidden">
                 <h1>ルームロビー</h1>
+                <div class="profile-bar">
+                    <div>
+                        <span id="lobby-my-emoji"></span> <span id="lobby-my-name"></span>
+                        <button onclick="changeName()" style="background:none; border:none; color:#ffd700; cursor:pointer; margin-left:5px;">✏️</button>
+                    </div>
+                </div>
+                
                 <div class="section-title">部屋にいるメンバー</div>
                 <div class="user-list" id="room-members-list"></div>
 
@@ -201,6 +223,44 @@
                     <h3>🎲 チンチロ</h3>
                     <p style="font-size: 12px; color: #9ca3af;" id="chinchiro-status-text">待機中 (0人)</p>
                     <button class="main-btn" id="join-chinchiro-btn" style="padding: 10px;">卓に参加する</button>
+                </div>
+            </div>
+
+            <div id="slot-screen" class="hidden">
+                <h1>🎰 スロット</h1>
+                <div class="profile-bar">
+                    <div>所持: 🪙 <span id="slot-my-coins"></span> コイン</div>
+                    <button class="sm-btn danger-bg" onclick="showScreen('home-screen')">戻る</button>
+                </div>
+
+                <div style="position:relative; width: 100%; max-width: 320px; margin: 0 auto; background: #222; padding: 30px 20px 20px 20px; border-radius: 15px; border: 5px solid #444; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+                    
+                    <div id="peka-lamp" style="position:absolute; bottom: 20px; left: 15px; width: 45px; height: 35px; background: #330000; border-radius: 50%; border: 2px solid #111; display:flex; justify-content:center; align-items:center; transition:0.1s;">
+                        <span style="color:#550000; font-size:10px; font-weight:bold;">GOGO!</span>
+                    </div>
+
+                    <div style="display:flex; justify-content: space-between; background: #111; padding: 10px; border-radius: 8px; border: 3px inset #555;">
+                        <div class="slot-reel"><span id="reel-1" class="text-red">7</span></div>
+                        <div class="slot-reel"><span id="reel-2" class="text-red">7</span></div>
+                        <div class="slot-reel"><span id="reel-3" class="text-red">7</span></div>
+                    </div>
+
+                    <div style="margin-top: 20px; background: #000; color: #0f0; border: 3px inset #333; padding: 8px; font-family: monospace; font-size: 18px; text-shadow: 0 0 5px #0f0; border-radius: 5px;" id="slot-message">
+                        INSERT COIN
+                    </div>
+
+                    <div style="display:flex; justify-content: space-between; margin-top: 25px; padding: 0 10px;">
+                        <button id="stop-btn-1" class="stop-btn" disabled>左</button>
+                        <button id="stop-btn-2" class="stop-btn" disabled>中</button>
+                        <button id="stop-btn-3" class="stop-btn" disabled>右</button>
+                    </div>
+
+                    <button id="slot-start-btn" class="main-btn" style="margin-top: 25px; font-size: 20px; padding: 15px; background: linear-gradient(#ffd700, #b8860b); border: 2px solid #fff; box-shadow: 0 5px 0 #8b6508;">レバーON (100C)</button>
+
+                    <div id="slot-cutin" class="hidden cutin-bg" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 100; display:flex; justify-content:center; align-items:center; flex-direction:column; border-radius:10px;">
+                        <div style="font-size: 50px; color: #ffd700; font-weight: 900; text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 0 0 30px #ff0000; animation: zoomIn 0.3s ease-out forwards;">激熱!!</div>
+                        <div style="font-size: 18px; color: #fff; font-weight:bold; margin-top:5px; text-shadow: 1px 1px 2px #000;">ボーナス確定!?</div>
+                    </div>
                 </div>
             </div>
 
@@ -215,7 +275,7 @@
                     <div style="text-align: center; font-weight: bold; color: #ffd700; font-size: 20px; margin-bottom: 15px;">🏆 清算結果</div>
                     <div class="my-result-card">
                         <div id="my-vs-text" style="font-size: 14px; margin-bottom: 8px;"></div>
-                        <div id="my-diff-text" style="font-size: 36px; font-weight: bold; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                        <div id="my-diff-text" style="font-size: 36px; font-weight: bold;"></div>
                     </div>
                     <div style="font-size: 12px; color: #9ca3af; margin-bottom: 5px;">全体の動き</div>
                     <div id="other-results-container"></div>
@@ -307,6 +367,25 @@
             localStorage.setItem('bgmVolLevel', volLevel);
         };
 
+        // --- 名前変更機能 ---
+        window.changeName = async () => {
+            const newName = prompt("新しい名前を入力してください", myData.name);
+            if (newName && newName.trim() !== "") {
+                myData.name = newName.trim();
+                localStorage.setItem('casinoName', myData.name);
+                
+                document.getElementById('my-name').innerText = myData.name;
+                document.getElementById('lobby-my-name').innerText = myData.name;
+                document.getElementById('username').value = myData.name;
+                
+                await update(ref(db, `users/${currentUserId}`), { name: myData.name });
+                if (currentRoomId) {
+                    await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { name: myData.name });
+                }
+                alert("名前を変更しました！");
+            }
+        };
+
         // --- スマホUI・フレンド機能 ---
         window.togglePhone = (show) => {
             const overlay = document.getElementById('smartphone-overlay');
@@ -389,11 +468,11 @@
             else if (tab === 'recent') {
                 const rSnap = await get(ref(db, `users/${currentUserId}/recentPlayers`));
                 const recents = rSnap.val() || {};
-                const rUids = Object.keys(recents).sort((a,b) => recents[b] - recents[a]); // 新しい順
+                const rUids = Object.keys(recents).sort((a,b) => recents[b] - recents[a]);
                 if(rUids.length === 0) return content.innerHTML = '<div style="text-align:center;">最近遊んだ人はいません</div>';
 
                 let html = '';
-                for(let uid of rUids.slice(0, 10)) { // 最大10件
+                for(let uid of rUids.slice(0, 10)) {
                     const uSnap = await get(ref(db, `users/${uid}`));
                     if(!uSnap.exists()) continue;
                     const u = uSnap.val();
@@ -457,7 +536,7 @@
 
         // --- 基本UI制御 ---
         window.selectEmoji = (e) => { myData.emoji = e; document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('selected', b.innerText === e)); }
-        function showScreen(id) { ['login-screen', 'home-screen', 'room-lobby-screen', 'chinchiro-screen'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+        function showScreen(id) { ['login-screen', 'home-screen', 'room-lobby-screen', 'chinchiro-screen', 'slot-screen'].forEach(s => document.getElementById(s).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
         
         function updateHeaderUI() {
             if (currentRoomId) {
@@ -537,18 +616,21 @@
                 const snapshot = await get(userRef);
                 if (snapshot.exists()) {
                     myData.coins = snapshot.val().coins;
-                    myData.friendCode = snapshot.val().friendCode;
+                    myData.friendCode = snapshot.val().friendCode || Math.random().toString(36).substring(2, 8).toUpperCase();
                 } else { 
                     myData.friendCode = Math.random().toString(36).substring(2, 8).toUpperCase();
                     await set(userRef, myData); 
                 }
                 
-                // フレンド機能のためのステータス管理
-                update(userRef, { online: true });
+                update(userRef, { online: true, name: myData.name, emoji: myData.emoji, friendCode: myData.friendCode });
                 onDisconnect(userRef).update({ online: false, currentRoom: null });
 
-                document.getElementById('my-name').innerText = myData.name; document.getElementById('my-emoji').innerText = myData.emoji;
+                document.getElementById('my-name').innerText = myData.name; 
+                document.getElementById('lobby-my-name').innerText = myData.name;
+                document.getElementById('my-emoji').innerText = myData.emoji;
+                document.getElementById('lobby-my-emoji').innerText = myData.emoji;
                 document.getElementById('my-coins-home').innerText = myData.coins; document.getElementById('my-coins-game').innerText = myData.coins;
+                
                 if (inviteRoomId) joinRoom(inviteRoomId); else showScreen('home-screen');
             } catch(e) { alert("ログインエラー"); }
             if(btn) { btn.disabled = false; btn.innerText = "決定"; }
@@ -575,9 +657,7 @@
             const myRoomRef = ref(db, `rooms/${roomId}/members/${currentUserId}`);
             await set(myRoomRef, myData); onDisconnect(myRoomRef).remove();
             
-            // 自分のプロフィールに現在いる部屋を記録（フレンド合流用）
             await update(ref(db, `users/${currentUserId}`), { currentRoom: roomId });
-
             startRoomListener(roomId);
         }
 
@@ -587,7 +667,6 @@
                 const data = snapshot.val();
                 if (!data) { alert("解散されました"); window.location.href = window.location.pathname; return; }
                 
-                // 「最近遊んだ人」の記録を更新
                 const members = data.members || {};
                 let recentUpdates = {};
                 for (const uid in members) {
@@ -611,7 +690,139 @@
             document.getElementById('join-chinchiro-btn').innerText = amIPlaying ? "卓に戻る" : ((chin.status !== 'waiting') ? "観戦する" : "卓に参加する");
         }
 
-        // --- チンチロ卓 ---
+        // ==========================================
+        // 🎰 スロットロジック
+        // ==========================================
+        let slotIntervals = [null, null, null];
+        let slotResult = [1, 2, 3];
+        let slotStopped = [true, true, true];
+        let isSlotSpinning = false;
+        let slotInternalHit = null;
+
+        document.getElementById('play-slot-btn').addEventListener('click', () => {
+            showScreen('slot-screen');
+            document.getElementById('slot-my-coins').innerText = myData.coins;
+            ['reel-1','reel-2','reel-3'].forEach(id => {
+                const el = document.getElementById(id);
+                el.innerText = '7'; el.className = 'text-red';
+            });
+            document.getElementById('slot-message').innerText = 'INSERT COIN';
+            document.getElementById('peka-lamp').style.background = '#330000';
+            document.getElementById('peka-lamp').style.boxShadow = 'none';
+        });
+
+        function peka() {
+            const lamp = document.getElementById('peka-lamp');
+            lamp.style.background = '#ff0000';
+            lamp.style.boxShadow = '0 0 20px 10px rgba(255, 0, 0, 0.8), inset 0 0 10px #fff';
+        }
+
+        document.getElementById('slot-start-btn').addEventListener('click', async () => {
+            if (myData.coins < 100) return alert("コインが足りません！");
+            if (isSlotSpinning) return;
+
+            // 100C消費
+            const newCoins = myData.coins - 100;
+            myData.coins = newCoins;
+            document.getElementById('slot-my-coins').innerText = newCoins;
+            document.getElementById('my-coins-home').innerText = newCoins;
+            await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
+            if(currentRoomId) await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
+
+            isSlotSpinning = true;
+            slotStopped = [false, false, false];
+            document.getElementById('slot-message').innerText = 'SPINNING...';
+            document.getElementById('peka-lamp').style.background = '#330000';
+            document.getElementById('peka-lamp').style.boxShadow = 'none';
+            
+            // 内部抽選
+            const rand = Math.random();
+            if (rand < 0.05) slotInternalHit = '7';      // 5%
+            else if (rand < 0.25) slotInternalHit = 'normal'; // 20%
+            else slotInternalHit = 'miss';               // 75%
+
+            if (slotInternalHit === '7') slotResult = [7, 7, 7];
+            else if (slotInternalHit === 'normal') {
+                const n = [1,2,3,4,5,6,8,9][Math.floor(Math.random()*8)];
+                slotResult = [n, n, n];
+            } else {
+                slotResult = [Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1];
+                if (slotResult[0] === slotResult[1] && slotResult[1] === slotResult[2]) slotResult[2] = (slotResult[2] % 9) + 1;
+            }
+
+            // カットイン演出 (7確定時の50%)
+            if (slotInternalHit === '7' && Math.random() < 0.5) {
+                document.getElementById('slot-cutin').classList.remove('hidden');
+                setTimeout(() => document.getElementById('slot-cutin').classList.add('hidden'), 1500);
+            }
+            
+            // レバーオン ペカ
+            if (slotInternalHit !== 'miss' && Math.random() < 0.25) peka();
+
+            ['stop-btn-1','stop-btn-2','stop-btn-3'].forEach(id => document.getElementById(id).disabled = false);
+            document.getElementById('slot-start-btn').disabled = true;
+
+            for(let i=0; i<3; i++) {
+                document.getElementById(`reel-${i+1}`).parentElement.classList.add('rolling');
+                slotIntervals[i] = setInterval(() => {
+                    const el = document.getElementById(`reel-${i+1}`);
+                    const num = Math.floor(Math.random()*9)+1;
+                    el.innerText = num;
+                    el.className = (num === 7) ? 'text-red' : 'text-black';
+                }, 50);
+            }
+        });
+
+        [1, 2, 3].forEach(i => {
+            document.getElementById(`stop-btn-${i}`).addEventListener('click', () => {
+                if(slotStopped[i-1]) return;
+                slotStopped[i-1] = true;
+                clearInterval(slotIntervals[i-1]);
+                
+                const el = document.getElementById(`reel-${i}`);
+                el.parentElement.classList.remove('rolling');
+                el.innerText = slotResult[i-1];
+                el.className = (slotResult[i-1] === 7) ? 'text-red' : 'text-black';
+                
+                document.getElementById(`stop-btn-${i}`).disabled = true;
+
+                // 停止時 ペカ
+                if (slotInternalHit !== 'miss' && Math.random() < 0.3 && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') {
+                    peka();
+                }
+
+                checkSlotEnd();
+            });
+        });
+
+        async function checkSlotEnd() {
+            if (slotStopped[0] && slotStopped[1] && slotStopped[2]) {
+                isSlotSpinning = false;
+                document.getElementById('slot-start-btn').disabled = false;
+
+                // 最終ペカ
+                if (slotInternalHit !== 'miss' && document.getElementById('peka-lamp').style.background !== 'rgb(255, 0, 0)') peka();
+
+                if (slotResult[0] === slotResult[1] && slotResult[1] === slotResult[2]) {
+                    let winCoins = (slotResult[0] === 7) ? 3000 : 500;
+                    document.getElementById('slot-message').innerText = (slotResult[0] === 7) ? '777! +3000C' : `WIN! +${winCoins}C`;
+
+                    const newCoins = myData.coins + winCoins;
+                    myData.coins = newCoins;
+                    document.getElementById('slot-my-coins').innerText = newCoins;
+                    document.getElementById('my-coins-home').innerText = newCoins;
+                    await update(ref(db, `users/${currentUserId}`), { coins: newCoins });
+                    if(currentRoomId) await update(ref(db, `rooms/${currentRoomId}/members/${currentUserId}`), { coins: newCoins });
+                } else {
+                    document.getElementById('slot-message').innerText = 'LOSE...';
+                }
+            }
+        }
+
+
+        // ==========================================
+        // 🎲 チンチロ卓
+        // ==========================================
         document.getElementById('join-chinchiro-btn').addEventListener('click', async () => {
             const chSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
             const cData = chSnap.val() || {}; const playersObj = cData.players || {};
@@ -891,12 +1102,22 @@
 
                 let turnEnds = false;
                 if (yaku.rank !== 0 || newCount >= 3) turnEnds = true;
+                if (newCount >= 3 && yaku.rank === 0) yaku.name = `目無し (確定)`;
                 
                 await update(pRef, { isRolling: false, finalDice: [d1,d2,d3], rollCount: newCount });
                 await update(ref(db, `rooms/${currentRoomId}/chinchiro`), { lastDice: [d1, d2, d3] });
 
                 if (turnEnds) {
                     await update(pRef, { yakuData: yaku });
+                    setTimeout(async () => {
+                        const currentChSnap = await get(ref(db, `rooms/${currentRoomId}/chinchiro`));
+                        if (currentChSnap.val().turnIndex + 1 >= currentChSnap.val().turnOrder.length) {
+                            const finalRoomSnap = await get(ref(db, `rooms/${currentRoomId}`));
+                            calculateAndApplyPayout(finalRoomSnap.val());
+                        } else {
+                            update(ref(db, `rooms/${currentRoomId}/chinchiro`), { turnIndex: currentChSnap.val().turnIndex + 1 });
+                        }
+                    }, 3000); // 3秒見せる
                 } else {
                     document.getElementById('roll-dice-btn').classList.remove('hidden');
                 }
@@ -907,9 +1128,10 @@
         async function calculateAndApplyPayout(rData) {
             const members = rData.members; const cData = rData.chinchiro;
             const oyaUid = cData.oya; const oyaYaku = cData.players[oyaUid].yakuData;
+            const oyaName = members[oyaUid].name;
             
             let updates = {}; 
-            let resData = { oyaId: oyaUid, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
+            let resData = { oyaId: oyaUid, oyaName: oyaName, oyaYaku: oyaYaku.name, myDiffs: {}, playerYakus: {} };
             
             for (let uid in cData.players) {
                 if(members[uid]) {
